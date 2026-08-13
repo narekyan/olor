@@ -84,19 +84,35 @@ result would get a large head start on the same day's puzzle.
 
 ## Analytics
 
-`index.html` ends with a Cloudflare Web Analytics hook. It is inert until you
-fill in `CF_ANALYTICS_TOKEN`:
+Two independent hooks at the end of `index.html`, both cookieless, both inert
+until you fill in their constant. Neither needs a consent banner.
 
-1. Sign up at [dash.cloudflare.com](https://dash.cloudflare.com) — free, and the
-   site does not need to use Cloudflare DNS.
-2. **Analytics & Logs → Web Analytics → Add a site**, enter the Pages hostname.
-3. Copy the token out of the JS snippet it shows you and paste it into
-   `CF_ANALYTICS_TOKEN`.
+**`CF_ANALYTICS_TOKEN`** — Cloudflare Web Analytics: how many people opened the
+game. Sign up at [dash.cloudflare.com](https://dash.cloudflare.com) (free, and
+the site does not need Cloudflare DNS), then **Analytics & Logs → Web Analytics
+→ Add a site**, and copy the token out of the JS snippet it gives you. You get
+daily visitors, pageviews, referrers, countries and devices.
 
-It is cookieless and stores no personal data, so it needs no consent banner.
-You get daily visitors, pageviews, referrers, countries and devices — but no
-per-person history, by design. Note the service worker is network-first and
-scoped to same-origin requests, so it never caches or intercepts the beacon.
+**`GOATCOUNTER_CODE`** — [GoatCounter](https://www.goatcounter.com): the same
+pageview numbers *plus* counted actions, which Cloudflare cannot do. Sign up,
+pick a subdomain, and put the code here — `olor` if your dashboard is
+`olor.goatcounter.com`. Its dashboard can be made public. Events fired:
+
+| event | when |
+|---|---|
+| `share/native` | the system share sheet is opened |
+| `share/linkedin`, `share/instagram`, `share/copy-text` | that share button is clicked |
+| `solved/no-hints`, `solved/with-hints` | the puzzle is completed |
+| `hint` | a hint is taken |
+| `install` | the install prompt is accepted |
+
+Either one is enough for visitor counts; use GoatCounter if you want the share
+and completion numbers. Since the puzzle is once a day, "plays per user" is
+best read as visits ÷ visitors, and `solved/*` ÷ visitors is your completion
+rate. Neither tool keeps per-person history, by design.
+
+The service worker is network-first and only handles same-origin requests, so
+it never caches or intercepts either beacon.
 
 ## Files
 
