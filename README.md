@@ -82,6 +82,22 @@ would leak the wall positions and which tiles belong to which word, and in this
 game that partition *is* most of the difficulty — so anyone seeing a shared
 result would get a large head start on the same day's puzzle.
 
+## Analytics
+
+`index.html` ends with a Cloudflare Web Analytics hook. It is inert until you
+fill in `CF_ANALYTICS_TOKEN`:
+
+1. Sign up at [dash.cloudflare.com](https://dash.cloudflare.com) — free, and the
+   site does not need to use Cloudflare DNS.
+2. **Analytics & Logs → Web Analytics → Add a site**, enter the Pages hostname.
+3. Copy the token out of the JS snippet it shows you and paste it into
+   `CF_ANALYTICS_TOKEN`.
+
+It is cookieless and stores no personal data, so it needs no consent banner.
+You get daily visitors, pageviews, referrers, countries and devices — but no
+per-person history, by design. Note the service worker is network-first and
+scoped to same-origin requests, so it never caches or intercepts the beacon.
+
 ## Files
 
 ```
