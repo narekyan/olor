@@ -183,12 +183,13 @@
   .cell.trace{background:var(--tile-hi);box-shadow:0 0 0 2px var(--accent) inset;transform:scale(.965)}
   .cell.locked{color:#0d1017;font-weight:700}
   .cell .ch{position:relative;z-index:1}
-  /* first letter of a found word: white disc, marking where it starts */
+  /* first letter of a found word: a white ring around it, nothing filled, so
+     the word's own colour still reads through */
   .cell.start::before{
     content:"";position:absolute;left:50%;top:50%;
-    width:72%;aspect-ratio:1;border-radius:50%;
-    transform:translate(-50%,-50%);background:#fff;
-    box-shadow:0 1px 6px #0d101740
+    width:74%;aspect-ratio:1;border-radius:50%;
+    transform:translate(-50%,-50%);
+    border:2px solid #fff;background:none
   }
   .cell .dot{position:absolute;top:5px;right:6px;width:6px;height:6px;border-radius:50%;opacity:.9}
   .board.shake{animation:shake .32s}
