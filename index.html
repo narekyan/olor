@@ -43,6 +43,7 @@
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;min-height:100%}
+  body{position:relative}
   body{
     font-family:var(--font);
     background:
@@ -54,7 +55,7 @@
     display:flex;align-items:flex-start;justify-content:center;
     padding:max(18px,env(safe-area-inset-top)) 14px calc(34px + env(safe-area-inset-bottom));
   }
-  .app{width:100%;max-width:460px}
+  .app{width:100%;max-width:460px;margin:0 auto}
 
   header{display:flex;align-items:center;gap:10px;margin:0 2px 14px}
   h1{font-size:30px;letter-spacing:.22em;margin:0;font-weight:700;line-height:1;display:flex}
@@ -87,10 +88,31 @@
   button.cta{background:linear-gradient(100deg,#2563eb,#7c3aed);border-color:transparent;font-weight:600}
 
   .board-wrap{
-    position:relative;background:var(--card);
-    border:1px solid var(--line);border-radius:20px;padding:12px;
+    position:relative;border-radius:20px;padding:12px;
+    border:1px solid var(--line);
+    background:#171d2bcc;                  /* translucent: the city shows through */
+    backdrop-filter:blur(2px);
     box-shadow:0 18px 50px -20px #000c;
   }
+  /* Yerevan band — spans the full viewport width at exactly the board's
+     height. Its top/height are synced to .board-wrap in JS, and it sits
+     behind the app column, so it reads as a strip the board floats on. */
+  .band{
+    position:absolute;left:0;width:100%;z-index:0;pointer-events:none;
+    background:url("city.webp") center/cover no-repeat;
+    -webkit-mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent);
+            mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent);
+    opacity:0;transition:opacity .5s
+  }
+  /* dark scrim so the light illustration stays readable under the board */
+  .band::after{
+    content:"";position:absolute;inset:0;
+    background:linear-gradient(#0d1017e6,#0d1017a6 45%,#0d1017e6)
+  }
+  .band.on{opacity:1}
+  @media (max-width:640px){ .band{background-image:url("city-sm.webp")} }
+  .app{position:relative;z-index:1}
+
   .board{
     position:relative;aspect-ratio:1;width:100%;
     display:grid;
@@ -207,6 +229,7 @@
 </style>
 </head>
 <body>
+<div class="band" id="band" aria-hidden="true"></div>
 <div class="app">
   <header>
     <h1><i>Ո</i><i>Լ</i><i>Ո</i><i>Ր</i></h1>
@@ -835,72 +858,109 @@ async function copyResult() {
   }
 }
 
-/* Square result card for Instagram / image-only networks. Shows the brand
-   mark, never the day's board — see resultText(). */
-function resultCard() {
-  const S = 1080, cv = document.createElement("canvas");
-  cv.width = S; cv.height = S;
-  const g = cv.getContext("2d");
-  const FAM = '"Noto Sans Armenian","Mshtakan","Sylfaen",system-ui,sans-serif';
+/* A fixed decorative board — the same every day, spelling ողջույն / գիշեր /
+   լույս / բառ. It looks like the game without revealing anything about the
+   day's puzzle, unlike a real board diagram. */
+const CARD_BOARD = [
+  {word: "բառ",     path: [11, 12, 13]},
+  {word: "լույս",   path: [14, 19, 24, 23]},
+  {word: "գիշեր",   path: [5, 10, 15, 20, 21]},
+  {word: "ողջույն", path: [0, 1, 2, 3, 4, 9]},
+];
 
-  const bg = g.createLinearGradient(0, 0, S, S);
+/* Portrait result card (4:5) for Instagram and other image-only networks. */
+function resultCard() {
+  const W = 1080, H = 1350, cv = document.createElement("canvas");
+  cv.width = W; cv.height = H;
+  const g = cv.getContext("2d");
+  const FAM = '"Noto Sans Armenian","Mshtakan","Sylfaen","Arial Unicode MS",system-ui,sans-serif';
+
+  const bg = g.createLinearGradient(0, 0, W, H);
   bg.addColorStop(0, "#1b2540"); bg.addColorStop(1, "#0b0e15");
-  g.fillStyle = bg; g.fillRect(0, 0, S, S);
+  g.fillStyle = bg; g.fillRect(0, 0, W, H);
   g.textAlign = "center";
-  g.textBaseline = "alphabetic";
 
   // title, one colour per letter, matching the logo
-  const title = "ՈԼՈՐ", size = 92, track = size * .2;
+  const title = "ՈԼՈՐ", size = 92, track = size * .22;
   g.font = `700 ${size}px ${FAM}`;
   const widths = [...title].map(ch => g.measureText(ch).width);
   const total = widths.reduce((a, b) => a + b, 0) + track * (title.length - 1);
-  let x = S / 2 - total / 2;
+  let x = W / 2 - total / 2;
+  g.textAlign = "left";
   [...title].forEach((ch, i) => {
     g.fillStyle = col(i);
-    g.textAlign = "left";
-    g.fillText(ch, x, 170);
+    g.fillText(ch, x, 152);
     x += widths[i] + track;
   });
   g.textAlign = "center";
 
   g.font = `500 32px ${FAM}`;
   g.fillStyle = "#8a93a8";
-  g.fillText(MODE === "daily" ? `#${puzzleNo(today)} · ${armDate(today)}` : "պատահական խաղ", S / 2, 224);
+  g.fillText(MODE === "daily" ? `#${puzzleNo(today)} · ${armDate(today)}` : "պատահական խաղ", W / 2, 208);
 
-  // brand mark: the winding path, same shape as the app icon
-  const m = 300, mx = (S - m) / 2, my = 292, u = m / 240;  // design tiles span 136..376
-  const P = [[172,172],[340,172],[340,256],[172,256],[172,340],[340,340]];
-  const grad = g.createLinearGradient(mx, my, mx + m, my + m);
-  grad.addColorStop(0, "#7dd3fc"); grad.addColorStop(.5, "#a78bfa"); grad.addColorStop(1, "#fb7185");
-  g.strokeStyle = grad;
-  g.lineWidth = 42 * u;
-  g.lineCap = "round";
-  g.lineJoin = "round";
-  g.beginPath();
-  P.forEach(([px, py], i) => {
-    const X = mx + (px - 136) * u, Y = my + (py - 136) * u;
-    i ? g.lineTo(X, Y) : g.moveTo(X, Y);
+  // decorative board
+  const pad = 170, side = W - pad * 2, gap = side * .022, cs = (side - gap * 4) / 5, top = 262;
+  const rr = (bx, by, w, h, r) => {
+    g.beginPath();
+    g.moveTo(bx + r, by);
+    g.arcTo(bx + w, by, bx + w, by + h, r);
+    g.arcTo(bx + w, by + h, bx, by + h, r);
+    g.arcTo(bx, by + h, bx, by, r);
+    g.arcTo(bx, by, bx + w, by, r);
+    g.closePath();
+  };
+  const cell = i => [pad + (i % 5) * (cs + gap), top + ((i / 5) | 0) * (cs + gap)];
+
+  for (let i = 0; i < CELLS; i++) {
+    const [bx, by] = cell(i);
+    const w = CARD_BOARD.findIndex(b => b.path.includes(i));
+    g.fillStyle = w >= 0 ? col(w) : "#0f131c";
+    rr(bx, by, cs, cs, cs * .18);
+    g.fill();
+  }
+  // connecting lines, like the solved paths in game
+  g.lineCap = "round"; g.lineJoin = "round";
+  g.strokeStyle = "#0d1017"; g.globalAlpha = .35; g.lineWidth = cs * .1;
+  CARD_BOARD.forEach(b => {
+    g.beginPath();
+    b.path.forEach((i, k) => {
+      const [bx, by] = cell(i);
+      k ? g.lineTo(bx + cs / 2, by + cs / 2) : g.moveTo(bx + cs / 2, by + cs / 2);
+    });
+    g.stroke();
   });
-  g.stroke();
+  g.globalAlpha = 1;
+  // letters
+  CARD_BOARD.forEach(b => {
+    const seq = letters(b.word);
+    g.fillStyle = "#0d1017";
+    b.path.forEach((i, k) => {
+      const [bx, by] = cell(i);
+      g.font = `700 ${Math.round(cs * (seq[k].length > 1 ? .38 : .52))}px ${FAM}`;
+      g.textBaseline = "middle";
+      g.fillText(seq[k], bx + cs / 2, by + cs / 2 + cs * .02);
+    });
+  });
+  g.textBaseline = "alphabetic";
 
-  // result
+  // the player's result — board bottom sits at 1002, URL baseline at 1300
   g.fillStyle = "#e8ecf5";
-  g.font = `700 132px ${FAM}`;
-  g.fillText(fmt(elapsed), S / 2, 780);
-  g.font = `600 40px ${FAM}`;
+  g.font = `700 120px ${FAM}`;
+  g.fillText(fmt(elapsed), W / 2, 1112);
+  g.font = `600 38px ${FAM}`;
   g.fillText(`${byPlayer.filter(Boolean).length}/4 բառ` +
-             (hints ? ` · ${hints} հուշում` : " · առանց հուշման"), S / 2, 846);
+             (hints ? ` · ${hints} հուշում` : " · առանց հուշման"), W / 2, 1172);
 
   const st = load().stats || {};
   if (MODE === "daily" && (st.streak || 0) > 1) {
     g.fillStyle = "#fbbf24";
-    g.font = `600 34px ${FAM}`;
-    g.fillText(`${st.streak} օր անընդմեջ`, S / 2, 908);
+    g.font = `600 33px ${FAM}`;
+    g.fillText(`${st.streak} օր անընդմեջ`, W / 2, 1226);
   }
 
   g.fillStyle = "#8a93a8";
   g.font = `500 32px ${FAM}`;
-  g.fillText(SITE.replace(/^https?:\/\//, ""), S / 2, 1000);
+  g.fillText(SITE.replace(/^https?:\/\//, ""), W / 2, 1300);
 
   return new Promise(res => cv.toBlob(res, "image/png"));
 }
@@ -971,6 +1031,19 @@ $("closeWin").onclick = () => { win.classList.add("hidden"); updateHint(); };
 win.addEventListener("pointerdown", e => {
   if (e.target === win) { win.classList.add("hidden"); updateHint(); }
 });
+
+/* ── Yerevan band, aligned to the board ──────────────────────────────── */
+const band = $("band"), boardWrap = document.querySelector(".board-wrap");
+function syncBand() {
+  const r = boardWrap.getBoundingClientRect();
+  band.style.top = (r.top + window.scrollY) + "px";
+  band.style.height = r.height + "px";
+  band.classList.add("on");
+}
+addEventListener("resize", syncBand);
+addEventListener("load", syncBand);
+new ResizeObserver(syncBand).observe(boardWrap);
+new ResizeObserver(syncBand).observe(document.body);
 
 /* ── "scroll for more" nudge ─────────────────────────────────────────── */
 const hint = $("scrollhint");
