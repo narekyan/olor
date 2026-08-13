@@ -73,10 +73,14 @@ the date, so everyone gets the same board and it can be replayed identically.
 
 ## Sharing
 
-The result sheet copies a spoiler-free summary — score, time, and an emoji grid
-of the paths you found — and can also render a 1080×1080 PNG card for
-image-only networks via the Web Share API, falling back to a download on
-desktop.
+The result sheet copies a spoiler-free summary — words found, time, hints and
+streak — and can render a 1080×1080 PNG card for image-only networks via the
+Web Share API, falling back to a download on desktop.
+
+Neither the text nor the card ever draws the board. A Wordle-style emoji grid
+would leak the wall positions and which tiles belong to which word, and in this
+game that partition *is* most of the difficulty — so anyone seeing a shared
+result would get a large head start on the same day's puzzle.
 
 ## Files
 
