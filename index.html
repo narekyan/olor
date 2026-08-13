@@ -343,7 +343,6 @@ const armDate = key => new Intl.DateTimeFormat("hy-AM", {day: "numeric", month: 
 /* ── Grid ────────────────────────────────────────────────────────────── */
 const N = 5, CELLS = N * N;
 const COLORS = ["--w0", "--w1", "--w2", "--w3"];
-const EMOJI = ["🟩", "🟨", "🟪", "🟥"];
 const NB = Array.from({length: CELLS}, (_, i) => {
   const r = (i / N) | 0, c = i % N, out = [];
   if (r > 0) out.push(i - N);
@@ -797,25 +796,18 @@ function updateCountdown() {
 }
 
 /* ── Sharing ─────────────────────────────────────────────────────────── */
-function resultGrid() {
-  const rows = [];
-  for (let r = 0; r < N; r++) {
-    let line = "";
-    for (let c = 0; c < N; c++) {
-      const i = r * N + c;
-      if (puzzle.letters[i] === null) { line += "⬛"; continue; }
-      const idx = puzzle.words.findIndex(w => w.path.includes(i));
-      line += byPlayer[idx] ? EMOJI[idx] : "⬜";
-    }
-    rows.push(line);
-  }
-  return rows.join("\n");
+function streakLine() {
+  if (MODE !== "daily") return "";
+  const st = load().stats || {};
+  return (st.streak || 0) > 1 ? `\n🔥 ${st.streak} օր անընդմեջ` : "";
 }
 function resultText() {
   const head = MODE === "daily" ? `ՈԼՈՐ #${puzzleNo(today)}` : "ՈԼՈՐ";
   const meta = `${byPlayer.filter(Boolean).length}/4 բառ · ${fmt(elapsed)}` +
                (hints ? ` · ${hints} հուշում` : " · առանց հուշման");
-  return `${head}\n${meta}\n\n${resultGrid()}\n\nԽաղա՛ ${SITE}`;
+  // Deliberately no board diagram: it would give away the walls and the
+  // tiling, which is most of the puzzle.
+  return `${head}\n${meta}${streakLine()}\n\nԽաղա՛ ${SITE}`;
 }
 
 function toast(msg) {
@@ -843,55 +835,72 @@ async function copyResult() {
   }
 }
 
-/* Square result card for Instagram / image-only networks. */
+/* Square result card for Instagram / image-only networks. Shows the brand
+   mark, never the day's board — see resultText(). */
 function resultCard() {
   const S = 1080, cv = document.createElement("canvas");
   cv.width = S; cv.height = S;
   const g = cv.getContext("2d");
-  const F = '600 40px "Noto Sans Armenian","Mshtakan","Sylfaen",system-ui,sans-serif';
+  const FAM = '"Noto Sans Armenian","Mshtakan","Sylfaen",system-ui,sans-serif';
 
   const bg = g.createLinearGradient(0, 0, S, S);
-  bg.addColorStop(0, "#141a29"); bg.addColorStop(1, "#0b0e15");
+  bg.addColorStop(0, "#1b2540"); bg.addColorStop(1, "#0b0e15");
   g.fillStyle = bg; g.fillRect(0, 0, S, S);
-
   g.textAlign = "center";
-  g.font = '700 76px "Noto Sans Armenian","Mshtakan","Sylfaen",system-ui,sans-serif';
-  const tg = g.createLinearGradient(S * .3, 0, S * .7, 0);
-  tg.addColorStop(0, "#7dd3fc"); tg.addColorStop(.5, "#a78bfa"); tg.addColorStop(1, "#fb7185");
-  g.fillStyle = tg;
-  g.fillText("ՈԼՈՐ", S / 2, 132);
+  g.textBaseline = "alphabetic";
 
-  g.font = F.replace("40px", "30px");
+  // title, one colour per letter, matching the logo
+  const title = "ՈԼՈՐ", size = 92, track = size * .2;
+  g.font = `700 ${size}px ${FAM}`;
+  const widths = [...title].map(ch => g.measureText(ch).width);
+  const total = widths.reduce((a, b) => a + b, 0) + track * (title.length - 1);
+  let x = S / 2 - total / 2;
+  [...title].forEach((ch, i) => {
+    g.fillStyle = col(i);
+    g.textAlign = "left";
+    g.fillText(ch, x, 170);
+    x += widths[i] + track;
+  });
+  g.textAlign = "center";
+
+  g.font = `500 32px ${FAM}`;
   g.fillStyle = "#8a93a8";
-  g.fillText(MODE === "daily" ? `#${puzzleNo(today)} · ${armDate(today)}` : "պատահական խաղ", S / 2, 186);
+  g.fillText(MODE === "daily" ? `#${puzzleNo(today)} · ${armDate(today)}` : "պատահական խաղ", S / 2, 224);
 
-  const pad = 150, size = S - pad * 2, gap = size * .022, cs = (size - gap * 4) / 5, top = 236;
-  const rr = (x, y, w, h, r) => {
-    g.beginPath();
-    g.moveTo(x + r, y);
-    g.arcTo(x + w, y, x + w, y + h, r);
-    g.arcTo(x + w, y + h, x, y + h, r);
-    g.arcTo(x, y + h, x, y, r);
-    g.arcTo(x, y, x + w, y, r);
-    g.closePath();
-  };
-  for (let i = 0; i < CELLS; i++) {
-    const x = pad + (i % 5) * (cs + gap), y = top + ((i / 5) | 0) * (cs + gap);
-    const idx = puzzle.words.findIndex(w => w.path.includes(i));
-    const wall = puzzle.letters[i] === null;
-    g.fillStyle = wall ? "#0f131c" : (idx >= 0 && byPlayer[idx]) ? col(idx) : "#232b3d";
-    rr(x, y, cs, cs, cs * .18);
-    g.fill();
+  // brand mark: the winding path, same shape as the app icon
+  const m = 300, mx = (S - m) / 2, my = 292, u = m / 240;  // design tiles span 136..376
+  const P = [[172,172],[340,172],[340,256],[172,256],[172,340],[340,340]];
+  const grad = g.createLinearGradient(mx, my, mx + m, my + m);
+  grad.addColorStop(0, "#7dd3fc"); grad.addColorStop(.5, "#a78bfa"); grad.addColorStop(1, "#fb7185");
+  g.strokeStyle = grad;
+  g.lineWidth = 42 * u;
+  g.lineCap = "round";
+  g.lineJoin = "round";
+  g.beginPath();
+  P.forEach(([px, py], i) => {
+    const X = mx + (px - 136) * u, Y = my + (py - 136) * u;
+    i ? g.lineTo(X, Y) : g.moveTo(X, Y);
+  });
+  g.stroke();
+
+  // result
+  g.fillStyle = "#e8ecf5";
+  g.font = `700 132px ${FAM}`;
+  g.fillText(fmt(elapsed), S / 2, 780);
+  g.font = `600 40px ${FAM}`;
+  g.fillText(`${byPlayer.filter(Boolean).length}/4 բառ` +
+             (hints ? ` · ${hints} հուշում` : " · առանց հուշման"), S / 2, 846);
+
+  const st = load().stats || {};
+  if (MODE === "daily" && (st.streak || 0) > 1) {
+    g.fillStyle = "#fbbf24";
+    g.font = `600 34px ${FAM}`;
+    g.fillText(`${st.streak} օր անընդմեջ`, S / 2, 908);
   }
 
-  const bottom = top + size + 92;
-  g.fillStyle = "#e8ecf5";
-  g.font = F;
-  g.fillText(`${byPlayer.filter(Boolean).length}/4 բառ · ${fmt(elapsed)}` +
-             (hints ? ` · ${hints} հուշում` : " · առանց հուշման"), S / 2, bottom);
   g.fillStyle = "#8a93a8";
-  g.font = F.replace("40px", "30px");
-  g.fillText(SITE.replace(/^https?:\/\//, ""), S / 2, bottom + 54);
+  g.font = `500 32px ${FAM}`;
+  g.fillText(SITE.replace(/^https?:\/\//, ""), S / 2, 1000);
 
   return new Promise(res => cv.toBlob(res, "image/png"));
 }
