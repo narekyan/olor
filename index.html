@@ -182,6 +182,14 @@
   }
   .cell.trace{background:var(--tile-hi);box-shadow:0 0 0 2px var(--accent) inset;transform:scale(.965)}
   .cell.locked{color:#0d1017;font-weight:700}
+  .cell .ch{position:relative;z-index:1}
+  /* first letter of a found word: white disc, marking where it starts */
+  .cell.start::before{
+    content:"";position:absolute;left:50%;top:50%;
+    width:72%;aspect-ratio:1;border-radius:50%;
+    transform:translate(-50%,-50%);background:#fff;
+    box-shadow:0 1px 6px #0d101740
+  }
   .cell .dot{position:absolute;top:5px;right:6px;width:6px;height:6px;border-radius:50%;opacity:.9}
   .board.shake{animation:shake .32s}
   @keyframes shake{
@@ -614,7 +622,12 @@ function buildBoard() {
     const L = puzzle.letters[i];
     el.className = "cell" + (L === null ? " wall" : L.length > 1 ? " wide" : "");
     el.dataset.i = i;
-    el.textContent = L ?? "";
+    if (L !== null) {
+      const t = document.createElement("span");
+      t.className = "ch";
+      t.textContent = L;
+      el.appendChild(t);
+    }
     board.appendChild(el);
     cellEls.push(el);
   }
@@ -630,12 +643,16 @@ function wordOfCell(i) {
 
 function render() {
   cellEls.forEach((el, i) => {
-    el.classList.remove("trace", "locked");
+    el.classList.remove("trace", "locked", "start");
     el.style.background = "";
     el.querySelector(".dot")?.remove();
     if (puzzle.letters[i] === null) return;
     const w = wordOfCell(i);
-    if (w >= 0) { el.classList.add("locked"); el.style.background = col(w); }
+    if (w >= 0) {
+      el.classList.add("locked");
+      el.style.background = col(w);
+      if (puzzle.words[w].path[0] === i) el.classList.add("start");
+    }
     else if (trace.includes(i)) el.classList.add("trace");
   });
 
