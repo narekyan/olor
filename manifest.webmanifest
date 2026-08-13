@@ -1,0 +1,19 @@
+{
+  "name": "ՈԼՈՐ — հայերեն բառախաղ",
+  "short_name": "ՈԼՈՐ",
+  "description": "Օրվա հայերեն բառախաղ։ Գտի՛ր 4 բառը՝ 3, 4, 5 և 6 տառանոց, ոլորվող ճանապարհներով 5×5 դաշտում։",
+  "lang": "hy",
+  "dir": "ltr",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0d1017",
+  "theme_color": "#0d1017",
+  "categories": ["games", "word", "puzzle"],
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

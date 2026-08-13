@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="hy">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>ՈԼՈՐ — հայերեն բառախաղ</title>
+<meta name="description" content="Օրվա հայերեն բառախաղ։ Գտի՛ր 4 բառը՝ 3, 4, 5 և 6 տառանոց, ոլորվող ճանապարհներով 5×5 դաշտում։">
+<meta name="theme-color" content="#0d1017">
+
+<!-- link preview (LinkedIn / Facebook / iMessage) -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="ՈԼՈՐ — օրվա հայերեն բառախաղ">
+<meta property="og:description" content="Գտի՛ր 4 բառը՝ 3, 4, 5 և 6 տառանոց, ոլորվող ճանապարհներով 5×5 դաշտում։ Ամեն օր՝ նոր խաղ։">
+<meta property="og:image" content="https://narekyan.github.io/olor/icon-512.png">
+<meta property="og:url" content="https://narekyan.github.io/olor/">
+<meta name="twitter:card" content="summary_large_image">
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png" sizes="192x192">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ՈԼՈՐ">
+<style>
+  :root{
+    --bg:#0d1017;
+    --card:#171d2b;
+    --tile:#232b3d;
+    --tile-hi:#2e3850;
+    --wall:#0f131c;
+    --line:#2a3346;
+    --txt:#e8ecf5;
+    --muted:#8a93a8;
+    --accent:#7dd3fc;
+    --w0:#34d399;
+    --w1:#fbbf24;
+    --w2:#a78bfa;
+    --w3:#fb7185;
+    --gap:2.2;
+    --font:"Noto Sans Armenian","Noto Serif Armenian","Mshtakan","Sylfaen","Arial Unicode MS",system-ui,-apple-system,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;min-height:100%}
+  body{
+    font-family:var(--font);
+    background:
+      radial-gradient(900px 600px at 15% -10%, #1b2540 0%, transparent 60%),
+      radial-gradient(700px 500px at 110% 10%, #221a33 0%, transparent 55%),
+      var(--bg);
+    background-attachment:fixed;
+    color:var(--txt);
+    display:flex;align-items:flex-start;justify-content:center;
+    padding:max(18px,env(safe-area-inset-top)) 14px calc(34px + env(safe-area-inset-bottom));
+  }
+  .app{width:100%;max-width:460px}
+
+  header{display:flex;align-items:center;gap:10px;margin:0 2px 14px}
+  h1{
+    font-size:29px;letter-spacing:.22em;margin:0;font-weight:700;line-height:1;
+    background:linear-gradient(100deg,#7dd3fc,#a78bfa 45%,#fb7185);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .sub{font-size:11.5px;color:var(--muted);letter-spacing:.03em;line-height:1.45}
+  .sub b{color:#b9c2d6;font-weight:600}
+
+  .bar{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+  .stat{
+    background:var(--card);border:1px solid var(--line);border-radius:11px;
+    padding:7px 11px;font-size:12.5px;color:var(--muted);
+    display:flex;gap:7px;align-items:center
+  }
+  .stat b{color:var(--txt);font-weight:600;font-variant-numeric:tabular-nums}
+  .spacer{flex:1}
+  button{
+    font-family:var(--font);font-size:13px;color:var(--txt);cursor:pointer;
+    background:var(--card);border:1px solid var(--line);border-radius:11px;
+    padding:8px 13px;transition:.16s;
+  }
+  button:hover{background:var(--tile);border-color:#3a465f}
+  button:active{transform:translateY(1px)}
+  button:disabled{opacity:.4;cursor:default}
+  button.primary{background:#1f2740;border-color:#3a465f}
+  button.cta{background:linear-gradient(100deg,#2563eb,#7c3aed);border-color:transparent;font-weight:600}
+
+  .board-wrap{
+    position:relative;background:var(--card);
+    border:1px solid var(--line);border-radius:20px;padding:12px;
+    box-shadow:0 18px 50px -20px #000c;
+  }
+  .board{
+    position:relative;aspect-ratio:1;width:100%;
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    grid-template-rows:repeat(5,1fr);
+    gap:calc(var(--gap) * 1%);
+    touch-action:none;user-select:none;-webkit-user-select:none;
+  }
+  svg.overlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+  .cell{
+    position:relative;border-radius:13px;background:var(--tile);
+    display:flex;align-items:center;justify-content:center;
+    font-size:clamp(17px,5.4vw,25px);font-weight:600;
+    color:var(--txt);border:1px solid #ffffff0d;
+    transition:background .13s,transform .13s,box-shadow .13s;
+    cursor:pointer;letter-spacing:-.01em;
+  }
+  /* ու occupies one tile — shrink so the digraph still fits */
+  .cell.wide{font-size:clamp(13px,4.1vw,19px)}
+  .cell:hover:not(.wall){background:var(--tile-hi)}
+  .cell.wall{background:var(--wall);border-color:#ffffff08;cursor:default;
+    background-image:repeating-linear-gradient(45deg,#ffffff06 0 6px,transparent 6px 12px)}
+  .cell.trace{background:var(--tile-hi);box-shadow:0 0 0 2px var(--accent) inset;transform:scale(.965)}
+  .cell.locked{color:#0d1017;font-weight:700}
+  .cell .dot{position:absolute;top:5px;right:6px;width:6px;height:6px;border-radius:50%;opacity:.9}
+  .board.shake{animation:shake .32s}
+  @keyframes shake{
+    0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}
+    40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}
+  }
+
+  .words{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+  .chip{
+    display:flex;align-items:center;gap:11px;
+    background:var(--card);border:1px solid var(--line);border-radius:14px;padding:9px 12px;
+  }
+  .chip .len{
+    width:24px;height:24px;flex:none;border-radius:8px;display:grid;place-items:center;
+    font-size:12px;font-weight:700;color:#0d1017;background:var(--muted)
+  }
+  .chip .slots{display:flex;gap:5px;flex-wrap:wrap}
+  .slot{
+    min-width:26px;height:30px;padding:0 3px;border-radius:7px;background:#0f131c;
+    border:1px solid #ffffff0d;display:grid;place-items:center;
+    font-size:15px;font-weight:600;color:var(--txt)
+  }
+  .slot.wide{font-size:13px}
+  .slot.empty{color:#39435a}
+  .chip.done{cursor:pointer}
+  .chip.done .slot{background:#ffffff10;border-color:transparent}
+  .chip .tag{font-size:11px;color:var(--muted);margin-left:auto;white-space:nowrap}
+
+  .help{margin:12px 2px 0;font-size:12.5px;line-height:1.65;color:var(--muted)}
+  .help b{color:#b9c2d6;font-weight:600}
+  .row{display:flex;gap:8px;flex-wrap:wrap;margin:14px 2px 0;align-items:center}
+
+  /* how-to-play disclosure */
+  .how{margin-top:14px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:2px 12px 2px}
+  .how summary{
+    cursor:pointer;list-style:none;padding:11px 0;font-size:13.5px;font-weight:600;
+    display:flex;align-items:center;justify-content:space-between;color:#b9c2d6
+  }
+  .how summary::-webkit-details-marker{display:none}
+  .how summary .chev{color:var(--muted);font-size:16px;transition:transform .2s;line-height:1}
+  .how[open] summary .chev{transform:rotate(180deg)}
+  .how[open]{padding-bottom:12px}
+
+  /* "there is more below" nudge */
+  .scrollhint{
+    position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));
+    transform:translateX(-50%);z-index:8;
+    background:#1f2740ee;border:1px solid #3a465f;backdrop-filter:blur(6px);
+    font-size:12px;color:#b9c2d6;padding:8px 14px;border-radius:999px;
+    display:flex;align-items:center;gap:7px;box-shadow:0 10px 30px -12px #000;
+    animation:bob 1.9s ease-in-out infinite;transition:opacity .25s
+  }
+  .scrollhint span{font-size:15px;line-height:1}
+  @keyframes bob{0%,100%{transform:translate(-50%,0)}50%{transform:translate(-50%,4px)}}
+
+  /* result sheet */
+  .win{
+    position:fixed;inset:0;background:#070a10d9;backdrop-filter:blur(7px);
+    display:grid;place-items:center;z-index:9;padding:18px;overflow:auto
+  }
+  .win .box{
+    background:var(--card);border:1px solid var(--line);border-radius:22px;
+    padding:24px 22px;text-align:center;width:100%;max-width:340px;
+    box-shadow:0 30px 70px -20px #000
+  }
+  .win h2{margin:0 0 4px;font-size:23px}
+  .win .num{font-size:12px;color:var(--muted);margin-bottom:14px}
+  .winwords{display:flex;flex-direction:column;gap:6px;margin:0 0 14px}
+  .winwords > div{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    background:#0f131c;border-radius:10px;padding:7px 12px;font-size:16px;font-weight:600
+  }
+  .winwords span{font-size:11px;color:var(--muted);font-weight:500}
+  .statgrid{display:flex;gap:8px;margin:0 0 16px}
+  .statgrid div{flex:1;background:#0f131c;border-radius:10px;padding:9px 4px}
+  .statgrid b{display:block;font-size:19px;font-variant-numeric:tabular-nums}
+  .statgrid small{font-size:10px;color:var(--muted)}
+  .sharebtns{display:flex;flex-direction:column;gap:8px}
+  .sharebtns .two{display:flex;gap:8px}
+  .sharebtns .two button{flex:1}
+  .next{font-size:11.5px;color:var(--muted);margin:14px 0 0;font-variant-numeric:tabular-nums}
+  .toast{
+    position:fixed;left:50%;bottom:26px;transform:translate(-50%,14px);
+    background:#e8ecf5;color:#0d1017;font-size:13px;font-weight:600;
+    padding:10px 16px;border-radius:11px;opacity:0;pointer-events:none;
+    transition:.22s;z-index:20;max-width:88vw;text-align:center
+  }
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+  .hidden{display:none !important}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>ՈԼՈՐ</h1>
+    <div class="sub" id="subtitle"></div>
+  </header>
+
+  <div class="bar">
+    <div class="stat">Ժամանակ <b id="time">0:00</b></div>
+    <div class="stat">Գտնված <b id="found">0/4</b></div>
+    <div class="spacer"></div>
+    <button id="hint">Հուշում</button>
+    <button id="newgame" class="primary">Նոր խաղ</button>
+    <button id="result" class="primary hidden">Արդյունք</button>
+  </div>
+
+  <div class="board-wrap">
+    <div class="board" id="board">
+      <svg class="overlay" id="ov" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
+    </div>
+  </div>
+
+  <div class="words" id="words"></div>
+
+  <details class="how" id="how">
+  <summary>Ինչպես խաղալ<span class="chev">⌄</span></summary>
+  <p class="help">
+    Գտի՛ր <b>4 բառ</b>՝ 3, 4, 5 և 6 տառանոց։ Ամեն բառ գրված է ոլորվող ճանապարհով՝
+    <b>վեր, վար, ձախ, աջ</b> (ոչ անկյունագծով)։ Յուրաքանչյուր վանդակ պատկանում է
+    ուղիղ մեկ բառի, և բոլոր վանդակները պետք է լցվեն։
+    Քաշի՛ր մկնիկով կամ սեղմի՛ր վանդակները հերթով, ապա՝ վերջին վանդակի վրա նորից։
+    Բառը կարելի է կարդալ <b>երկու ուղղությամբ</b>։
+    Գտնված բառը կրկին բացելու համար սեղմի՛ր դրա տողը։
+    <b>ու</b>-ն մեկ տառ է և զբաղեցնում է մեկ վանդակ։
+  </p>
+  </details>
+
+  <div class="row">
+    <button id="reveal" style="font-size:12px;padding:6px 10px">Ցույց տալ պատասխանը</button>
+    <button id="install" class="hidden" style="font-size:12px;padding:6px 10px">Տեղադրել հեռախոսում</button>
+  </div>
+</div>
+
+<button class="scrollhint hidden" id="scrollhint">Ինչպես խաղալ <span>⌄</span></button>
+
+<div class="win hidden" id="win">
+  <div class="box">
+    <h2 id="winTitle">Շնորհավո՜ր</h2>
+    <div class="num" id="winNum"></div>
+    <div class="winwords" id="winWords"></div>
+    <div class="statgrid" id="winStats"></div>
+    <div class="sharebtns">
+      <button class="cta" id="shareNative">Կիսվել</button>
+      <div class="two">
+        <button id="shareLinkedIn">LinkedIn</button>
+        <button id="shareInstagram">Instagram</button>
+      </div>
+      <button id="copyText">Պատճենել տեքստը</button>
+      <button id="closeWin" style="border:none;background:none;color:var(--muted);font-size:12px">Փակել</button>
+    </div>
+    <p class="next" id="nextIn"></p>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="words.js"></script>
+<script>
+/* ═══ ՈԼՈՐ — an Armenian word-path puzzle ═════════════════════════════════
+   MODE: "daily"  — one deterministic puzzle per day (Yerevan time), progress
+                    and streak saved locally, shareable result.
+         "random" — a fresh puzzle on every click, nothing saved.
+   Override at runtime with ?mode=random / ?mode=daily (handy for testing).  */
+const DEFAULT_MODE = "daily";
+const SITE = "https://narekyan.github.io/olor/";
+const EPOCH = "2026-08-13";          // puzzle #1
+const TZ_OFFSET_H = 4;               // Asia/Yerevan, no DST since 2012
+const STORE = "olor.v1";
+
+const qMode = new URLSearchParams(location.search).get("mode");
+const MODE = (qMode === "random" || qMode === "daily") ? qMode
+           : (location.hash === "#random" ? "random" : DEFAULT_MODE);
+
+/* ── Fallback pool, used only if words.js failed to load ──────────────── */
+const FALLBACK_WORDS = {
+  3: ["բան","լավ","մեծ","նոր","տեր","սեր","կին","ժամ","տեղ","խաղ",
+      "բառ","տղա","աչք","վախ","հին","տուն","շուն","ջուր","սուր","մուկ"],
+  4: ["մարդ","հայր","մայր","տարի","արքա","խոսք","գործ","ձեռք","երազ","փառք",
+      "ամիս","վայր","բարի","ազատ","արագ","երկու","սուրբ","լույս","ուրախ","անուն"],
+  5: ["գիշեր","բոլոր","տիկին","երեկո","երկար","ընկեր","աղջիկ","քաղցր","բժիշկ","հազար",
+      "շաբաթ","պատիվ","ազնիվ","այսօր","սիրուն","արյուն","խանութ","աղմուկ","գումար","քնքուշ"],
+  6: ["աստված","մարդիկ","փոքրիկ","առաջին","վերջին","հաճելի","հարմար","զարմիկ","հայրիկ","երկինք",
+      "թշնամի","որսորդ","խելացի","սարսափ","հրաման","դոկտոր","առավոտ","ողջույն","հարյուր","ամուսին"]
+};
+const WORDS = (window.HY_WORDS && [3,4,5,6].every(L => (window.HY_WORDS[L] || []).length >= 10))
+  ? window.HY_WORDS : FALLBACK_WORDS;
+
+/* Split a word into Armenian letters: ո+ւ collapses into the single letter ու. */
+function letters(word) {
+  const out = [];
+  for (let i = 0; i < word.length; i++) {
+    if (word[i] === "ո" && word[i + 1] === "ւ") { out.push("ու"); i++; }
+    else out.push(word[i]);
+  }
+  return out;
+}
+
+/* ── Deterministic randomness ─────────────────────────────────────────── */
+function mulberry32(a) {
+  return function () {
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function fnv1a(str) {
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+let rnd = Math.random;                       // swapped per game
+const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = (rnd() * (i + 1)) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const pick = a => a[(rnd() * a.length) | 0];
+
+/* ── Dates (Yerevan) ─────────────────────────────────────────────────── */
+const dayKey = (d = new Date()) =>
+  new Date(d.getTime() + TZ_OFFSET_H * 3600e3).toISOString().slice(0, 10);
+const dayStartUTC = key => Date.parse(key + "T00:00:00Z") - TZ_OFFSET_H * 3600e3;
+const puzzleNo = key => Math.round((dayStartUTC(key) - dayStartUTC(EPOCH)) / 86400e3) + 1;
+const prevDay = key => dayKey(new Date(dayStartUTC(key) - 1000));
+const armDate = key => new Intl.DateTimeFormat("hy-AM", {day: "numeric", month: "long"})
+  .format(new Date(dayStartUTC(key) + 12 * 3600e3));
+
+/* ── Grid ────────────────────────────────────────────────────────────── */
+const N = 5, CELLS = N * N;
+const COLORS = ["--w0", "--w1", "--w2", "--w3"];
+const EMOJI = ["🟩", "🟨", "🟪", "🟥"];
+const NB = Array.from({length: CELLS}, (_, i) => {
+  const r = (i / N) | 0, c = i % N, out = [];
+  if (r > 0) out.push(i - N);
+  if (r < N - 1) out.push(i + N);
+  if (c > 0) out.push(i - 1);
+  if (c < N - 1) out.push(i + 1);
+  return out;
+});
+
+/* Carve 4 disjoint self-avoiding paths (6,5,4,3 cells); leftovers become walls. */
+function carve() {
+  const free = new Set(Array.from({length: CELLS}, (_, i) => i));
+  const paths = [];
+  for (const len of [6, 5, 4, 3]) {
+    const p = findPath(free, len);
+    if (!p) return null;
+    p.forEach(c => free.delete(c));
+    paths.push(p);
+  }
+  return paths;
+
+  function findPath(free, len) {
+    for (const start of shuffle([...free])) {
+      const path = [start], used = new Set([start]);
+      if (walk(start)) return path;
+      function walk(cur) {
+        if (path.length === len) return true;
+        for (const nb of shuffle(NB[cur].slice())) {
+          if (!free.has(nb) || used.has(nb)) continue;
+          used.add(nb); path.push(nb);
+          if (walk(nb)) return true;
+          path.pop(); used.delete(nb);
+        }
+        return false;
+      }
+    }
+    return null;
+  }
+}
+
+const turns = p => {
+  let t = 0;
+  for (let i = 2; i < p.length; i++) if (p[i - 1] - p[i - 2] !== p[i] - p[i - 1]) t++;
+  return t;
+};
+
+/* Count distinct self-avoiding paths spelling `seq`; a path and its reverse
+   count as one. Stops early at 2. */
+function placements(grid, seq) {
+  const found = new Set(), path = [], used = new Set();
+  for (let s = 0; s < CELLS; s++) {
+    if (grid[s] === seq[0]) { path.push(s); used.add(s); dfs(s, 1); path.pop(); used.delete(s); }
+    if (found.size > 1) return 2;
+  }
+  return found.size;
+
+  function dfs(cur, k) {
+    if (found.size > 1) return;
+    if (k === seq.length) {
+      const a = path.join(","), b = path.slice().reverse().join(",");
+      found.add(a < b ? a : b);
+      return;
+    }
+    for (const nb of NB[cur]) {
+      if (used.has(nb) || grid[nb] !== seq[k]) continue;
+      used.add(nb); path.push(nb);
+      dfs(nb, k + 1);
+      path.pop(); used.delete(nb);
+    }
+  }
+}
+
+/* Build a puzzle with a unique solution; prefer the twistiest layout. */
+function makePuzzle() {
+  let best = null;
+  for (let attempt = 0; attempt < 6000 && (!best || best.score < 9); attempt++) {
+    const paths = carve();
+    if (!paths) continue;
+
+    const grid = new Array(CELLS).fill(null);
+    const words = [];
+    let ok = true;
+    for (const p of paths) {
+      const w = pick(WORDS[p.length]);
+      if (words.some(x => x.word === w)) { ok = false; break; }
+      const seq = letters(w);
+      p.forEach((c, i) => grid[c] = seq[i]);
+      words.push({word: w, seq, path: p});
+    }
+    if (!ok) continue;
+    if (words.some(w => placements(grid, w.seq) !== 1)) continue;   // unique solution
+
+    const score = words.reduce((s, w) => s + turns(w.path), 0);
+    if (!best || score > best.score) {
+      words.sort((a, b) => a.seq.length - b.seq.length);
+      best = {letters: grid, words, score};
+    }
+  }
+  return best;
+}
+
+/* ── Storage ─────────────────────────────────────────────────────────── */
+const load = () => { try { return JSON.parse(localStorage.getItem(STORE)) || {}; } catch { return {}; } };
+const save = o => { try { localStorage.setItem(STORE, JSON.stringify(o)); } catch {} };
+
+/* ── State ───────────────────────────────────────────────────────────── */
+const $ = id => document.getElementById(id);
+const board = $("board"), ov = $("ov"), wordsEl = $("words"), win = $("win");
+
+const GAP = 2.2, CS = (100 - (N - 1) * GAP) / N;
+const cx = i => (i % N) * (CS + GAP) + CS / 2;
+const cy = i => ((i / N) | 0) * (CS + GAP) + CS / 2;
+
+let puzzle, cellEls = [], trace = [], dragging = false, moved = false;
+let solved = [], byPlayer = [], revealed = [], hints = 0, over = false, gaveUp = false;
+let today = dayKey(), elapsed = 0, running = false, lastTs = 0, tick = null;
+
+function newGame() {
+  if (MODE === "daily") {
+    today = dayKey();
+    rnd = mulberry32(fnv1a("olor-" + today));
+  } else {
+    rnd = Math.random;
+  }
+  puzzle = makePuzzle();
+  solved = puzzle.words.map(() => false);
+  byPlayer = puzzle.words.map(() => false);
+  revealed = puzzle.words.map(() => 0);
+  hints = 0; trace = []; over = false; gaveUp = false; elapsed = 0;
+
+  win.classList.add("hidden");
+  $("hint").disabled = false;
+  $("reveal").disabled = false;
+  // Daily is a single shared puzzle: no reroll, no giving up.
+  $("newgame").classList.toggle("hidden", MODE === "daily");
+  $("reveal").classList.toggle("hidden", MODE === "daily");
+  $("result").classList.add("hidden");
+  $("subtitle").innerHTML = MODE === "daily"
+    ? `հայերեն բառախաղ · <b>#${puzzleNo(today)}</b><br>${armDate(today)} · 5×5`
+    : "հայերեն բառախաղ · պատահական · 5×5";
+
+  buildBoard();
+  if (MODE === "daily") restore();
+  render();
+  startTimer();
+  if (over) showResult();
+}
+
+function restore() {
+  const st = load();
+  if (st.day !== today || !st.progress) return;
+  const p = st.progress;
+  // Word order is deterministic for a given day, so indices are stable.
+  if (Array.isArray(p.solved) && p.solved.length === 4) solved = p.solved.slice();
+  if (Array.isArray(p.byPlayer) && p.byPlayer.length === 4) byPlayer = p.byPlayer.slice();
+  if (Array.isArray(p.revealed) && p.revealed.length === 4) revealed = p.revealed.slice();
+  hints = p.hints | 0;
+  elapsed = p.elapsed | 0;
+  gaveUp = !!p.gaveUp;
+  over = !!p.over;
+  if (over) { $("hint").disabled = true; $("reveal").disabled = true; $("result").classList.remove("hidden"); }
+}
+
+function persist() {
+  if (MODE !== "daily") return;
+  const st = load();
+  st.day = today;
+  st.progress = {solved, byPlayer, revealed, hints, elapsed, over, gaveUp};
+  save(st);
+}
+
+/* ── Timer ───────────────────────────────────────────────────────────── */
+const fmt = s => `${(s / 60) | 0}:${String(s % 60).padStart(2, "0")}`;
+function startTimer() {
+  clearInterval(tick);
+  lastTs = performance.now();
+  running = !over;
+  $("time").textContent = fmt(elapsed);
+  tick = setInterval(() => {
+    const now = performance.now();
+    if (running && !over && document.visibilityState === "visible") {
+      elapsed += Math.round((now - lastTs) / 1000);
+      $("time").textContent = fmt(elapsed);
+      if (elapsed % 5 === 0) persist();
+    }
+    lastTs = now;
+  }, 1000);
+}
+document.addEventListener("visibilitychange", () => {
+  lastTs = performance.now();
+  if (document.visibilityState === "visible" && MODE === "daily" && dayKey() !== today) newGame();
+});
+
+/* ── Render ──────────────────────────────────────────────────────────── */
+function buildBoard() {
+  board.querySelectorAll(".cell").forEach(el => el.remove());
+  cellEls = [];
+  for (let i = 0; i < CELLS; i++) {
+    const el = document.createElement("div");
+    const L = puzzle.letters[i];
+    el.className = "cell" + (L === null ? " wall" : L.length > 1 ? " wide" : "");
+    el.dataset.i = i;
+    el.textContent = L ?? "";
+    board.appendChild(el);
+    cellEls.push(el);
+  }
+}
+
+const col = idx => getComputedStyle(document.documentElement).getPropertyValue(COLORS[idx]).trim();
+
+function wordOfCell(i) {
+  for (let w = 0; w < puzzle.words.length; w++)
+    if (solved[w] && puzzle.words[w].path.includes(i)) return w;
+  return -1;
+}
+
+function render() {
+  cellEls.forEach((el, i) => {
+    el.classList.remove("trace", "locked");
+    el.style.background = "";
+    el.querySelector(".dot")?.remove();
+    if (puzzle.letters[i] === null) return;
+    const w = wordOfCell(i);
+    if (w >= 0) { el.classList.add("locked"); el.style.background = col(w); }
+    else if (trace.includes(i)) el.classList.add("trace");
+  });
+
+  puzzle.words.forEach((w, idx) => {
+    if (solved[idx]) return;
+    for (let k = 0; k < revealed[idx]; k++) {
+      const el = cellEls[w.path[k]];
+      if (!el.querySelector(".dot")) {
+        const d = document.createElement("span");
+        d.className = "dot";
+        d.style.background = col(idx);
+        el.appendChild(d);
+      }
+    }
+  });
+
+  ov.innerHTML = "";
+  puzzle.words.forEach((w, idx) => { if (solved[idx]) ov.appendChild(poly(w.path, col(idx), 5.5, .55)); });
+  if (trace.length > 1) {
+    const accent = getComputedStyle(document.documentElement).getPropertyValue("--accent").trim();
+    ov.appendChild(poly(trace, accent, 4.5, .85));
+  }
+
+  wordsEl.innerHTML = "";
+  puzzle.words.forEach((w, idx) => {
+    const chip = document.createElement("div");
+    chip.className = "chip" + (solved[idx] ? " done" : "");
+    const c = col(idx);
+
+    const len = document.createElement("div");
+    len.className = "len";
+    len.textContent = w.seq.length;
+    if (solved[idx]) len.style.background = c;
+    chip.appendChild(len);
+
+    const slots = document.createElement("div");
+    slots.className = "slots";
+    for (let k = 0; k < w.seq.length; k++) {
+      const s = document.createElement("div");
+      const shown = solved[idx] || k < revealed[idx];
+      s.className = "slot" + (shown ? "" : " empty") + (w.seq[k].length > 1 ? " wide" : "");
+      s.textContent = shown ? w.seq[k] : "·";
+      if (solved[idx]) s.style.color = c;
+      slots.appendChild(s);
+    }
+    chip.appendChild(slots);
+
+    if (solved[idx] && !over) {
+      const tag = document.createElement("span");
+      tag.className = "tag";
+      tag.textContent = "բացել";
+      chip.appendChild(tag);
+      chip.onclick = () => { solved[idx] = false; byPlayer[idx] = false; persist(); render(); };
+    }
+    wordsEl.appendChild(chip);
+  });
+
+  $("found").textContent = `${solved.filter(Boolean).length}/4`;
+}
+
+function poly(path, color, width, opacity) {
+  const el = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+  el.setAttribute("points", path.map(i => `${cx(i)},${cy(i)}`).join(" "));
+  el.setAttribute("fill", "none");
+  el.setAttribute("stroke", color);
+  el.setAttribute("stroke-width", width);
+  el.setAttribute("stroke-opacity", opacity);
+  el.setAttribute("stroke-linecap", "round");
+  el.setAttribute("stroke-linejoin", "round");
+  el.setAttribute("vector-effect", "non-scaling-stroke");
+  return el;
+}
+
+/* ── Input ───────────────────────────────────────────────────────────── */
+const usable = i => puzzle.letters[i] !== null && wordOfCell(i) < 0;
+const adjacent = (a, b) => NB[a].includes(b);
+
+function extend(i) {
+  if (!usable(i)) return;
+  if (trace.length === 0) { trace = [i]; render(); return; }
+  if (trace[trace.length - 1] === i) return;
+  if (trace.length > 1 && trace[trace.length - 2] === i) { trace.pop(); render(); return; }
+  if (trace.includes(i)) return;
+  if (!adjacent(trace[trace.length - 1], i)) return;
+  trace.push(i);
+  render();
+}
+
+function cellAt(e) {
+  const el = document.elementFromPoint(e.clientX, e.clientY);
+  const c = el?.closest?.(".cell");
+  return c ? +c.dataset.i : -1;
+}
+
+board.addEventListener("pointerdown", e => {
+  if (over) return;
+  const i = cellAt(e);
+  if (i < 0) return;
+  e.preventDefault();
+  dragging = true; moved = false;
+  board.setPointerCapture?.(e.pointerId);
+  if (trace.length > 1 && trace[trace.length - 1] === i) { submit(); dragging = false; return; }
+  if (trace.length && adjacent(trace[trace.length - 1], i)) extend(i);
+  else if (usable(i)) { trace = [i]; render(); }
+  else { trace = []; render(); }
+});
+board.addEventListener("pointermove", e => {
+  if (!dragging || over) return;
+  const i = cellAt(e);
+  if (i < 0) return;
+  if (i !== trace[trace.length - 1]) moved = true;
+  extend(i);
+});
+board.addEventListener("pointerup", () => {
+  if (!dragging) return;
+  dragging = false;
+  if (moved && trace.length > 1) submit();
+});
+document.addEventListener("pointerdown", e => {
+  if (!e.target.closest(".board") && trace.length) { trace = []; render(); }
+});
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") { trace = []; render(); }
+  if (e.key === "Enter" && trace.length > 1) submit();
+});
+
+function submit() {
+  const s = trace.map(i => puzzle.letters[i]).join("");
+  const rev = trace.slice().reverse().map(i => puzzle.letters[i]).join("");
+  const idx = puzzle.words.findIndex((w, k) => !solved[k] && (w.word === s || w.word === rev));
+  if (idx >= 0) {
+    solved[idx] = true;
+    byPlayer[idx] = true;
+    trace = [];
+    persist();
+    render();
+    if (solved.every(Boolean)) finish(true);
+  } else {
+    board.classList.add("shake");
+    setTimeout(() => board.classList.remove("shake"), 340);
+    trace = [];
+    render();
+  }
+}
+
+/* ── Finish, stats, result sheet ─────────────────────────────────────── */
+function finish(won) {
+  over = true;
+  gaveUp = !won;
+  running = false;
+  $("hint").disabled = true;
+  $("reveal").disabled = true;
+  $("result").classList.remove("hidden");
+
+  if (MODE === "daily") {
+    const st = load();
+    const s = st.stats || {played: 0, wins: 0, streak: 0, max: 0, lastWin: null};
+    if (st.countedDay !== today) {
+      st.countedDay = today;
+      s.played++;
+      if (won) {
+        s.wins++;
+        s.streak = (s.lastWin === prevDay(today)) ? s.streak + 1 : 1;
+        s.max = Math.max(s.max, s.streak);
+        s.lastWin = today;
+      } else {
+        s.streak = 0;
+      }
+    }
+    st.stats = s;
+    save(st);
+    persist();
+  }
+  render();
+  setTimeout(showResult, 500);   // let the last word's colour land first
+}
+
+function showResult() {
+  const won = !gaveUp;
+  $("winTitle").textContent = won ? "Շնորհավո՜ր" : "Պատասխանը";
+  $("winNum").textContent = MODE === "daily"
+    ? `ՈԼՈՐ #${puzzleNo(today)} · ${armDate(today)}`
+    : "պատահական խաղ";
+
+  const box = $("winWords");
+  box.innerHTML = "";
+  puzzle.words.forEach((w, idx) => {
+    const row = document.createElement("div");
+    const name = document.createElement("b");
+    name.textContent = w.word;
+    name.style.color = col(idx);
+    const tag = document.createElement("span");
+    tag.textContent = byPlayer[idx] ? `${w.seq.length} տառ` : `${w.seq.length} տառ · չգտնված`;
+    row.append(name, tag);
+    box.appendChild(row);
+  });
+
+  const st = load(), s = st.stats || {};
+  const cells = [
+    [won ? `${byPlayer.filter(Boolean).length}/4` : `${byPlayer.filter(Boolean).length}/4`, "գտնված բառ"],
+    [fmt(elapsed), "ժամանակ"],
+    [String(hints), "հուշում"],
+  ];
+  if (MODE === "daily") cells.push([String(s.streak || 0), "օր անընդմեջ"]);
+  $("winStats").innerHTML = cells
+    .map(([v, l]) => `<div><b>${v}</b><small>${l}</small></div>`).join("");
+
+  $("shareNative").classList.toggle("hidden", !navigator.share);
+  win.classList.remove("hidden");
+  updateCountdown();
+  updateHint();
+}
+
+let cdTimer = null;
+function updateCountdown() {
+  clearInterval(cdTimer);
+  const el = $("nextIn");
+  if (MODE !== "daily") { el.textContent = ""; return; }
+  const paint = () => {
+    const left = Math.max(0, dayStartUTC(today) + 86400e3 - Date.now());
+    const h = Math.floor(left / 3600e3), m = Math.floor(left % 3600e3 / 60e3), sec = Math.floor(left % 60e3 / 1000);
+    el.textContent = `Հաջորդ խաղը՝ ${h}ժ ${String(m).padStart(2, "0")}ր ${String(sec).padStart(2, "0")}վ`;
+    if (left <= 0) { clearInterval(cdTimer); newGame(); }
+  };
+  paint();
+  cdTimer = setInterval(paint, 1000);
+}
+
+/* ── Sharing ─────────────────────────────────────────────────────────── */
+function resultGrid() {
+  const rows = [];
+  for (let r = 0; r < N; r++) {
+    let line = "";
+    for (let c = 0; c < N; c++) {
+      const i = r * N + c;
+      if (puzzle.letters[i] === null) { line += "⬛"; continue; }
+      const idx = puzzle.words.findIndex(w => w.path.includes(i));
+      line += byPlayer[idx] ? EMOJI[idx] : "⬜";
+    }
+    rows.push(line);
+  }
+  return rows.join("\n");
+}
+function resultText() {
+  const head = MODE === "daily" ? `ՈԼՈՐ #${puzzleNo(today)}` : "ՈԼՈՐ";
+  const meta = `${byPlayer.filter(Boolean).length}/4 բառ · ${fmt(elapsed)}` +
+               (hints ? ` · ${hints} հուշում` : " · առանց հուշման");
+  return `${head}\n${meta}\n\n${resultGrid()}\n\nԽաղա՛ ${SITE}`;
+}
+
+function toast(msg) {
+  const t = $("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => t.classList.remove("show"), 2600);
+}
+async function copyResult() {
+  const text = resultText();
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand("copy");
+    ta.remove();
+    return ok;
+  }
+}
+
+/* Square result card for Instagram / image-only networks. */
+function resultCard() {
+  const S = 1080, cv = document.createElement("canvas");
+  cv.width = S; cv.height = S;
+  const g = cv.getContext("2d");
+  const F = '600 40px "Noto Sans Armenian","Mshtakan","Sylfaen",system-ui,sans-serif';
+
+  const bg = g.createLinearGradient(0, 0, S, S);
+  bg.addColorStop(0, "#141a29"); bg.addColorStop(1, "#0b0e15");
+  g.fillStyle = bg; g.fillRect(0, 0, S, S);
+
+  g.textAlign = "center";
+  g.font = '700 76px "Noto Sans Armenian","Mshtakan","Sylfaen",system-ui,sans-serif';
+  const tg = g.createLinearGradient(S * .3, 0, S * .7, 0);
+  tg.addColorStop(0, "#7dd3fc"); tg.addColorStop(.5, "#a78bfa"); tg.addColorStop(1, "#fb7185");
+  g.fillStyle = tg;
+  g.fillText("ՈԼՈՐ", S / 2, 132);
+
+  g.font = F.replace("40px", "30px");
+  g.fillStyle = "#8a93a8";
+  g.fillText(MODE === "daily" ? `#${puzzleNo(today)} · ${armDate(today)}` : "պատահական խաղ", S / 2, 186);
+
+  const pad = 150, size = S - pad * 2, gap = size * .022, cs = (size - gap * 4) / 5, top = 236;
+  const rr = (x, y, w, h, r) => {
+    g.beginPath();
+    g.moveTo(x + r, y);
+    g.arcTo(x + w, y, x + w, y + h, r);
+    g.arcTo(x + w, y + h, x, y + h, r);
+    g.arcTo(x, y + h, x, y, r);
+    g.arcTo(x, y, x + w, y, r);
+    g.closePath();
+  };
+  for (let i = 0; i < CELLS; i++) {
+    const x = pad + (i % 5) * (cs + gap), y = top + ((i / 5) | 0) * (cs + gap);
+    const idx = puzzle.words.findIndex(w => w.path.includes(i));
+    const wall = puzzle.letters[i] === null;
+    g.fillStyle = wall ? "#0f131c" : (idx >= 0 && byPlayer[idx]) ? col(idx) : "#232b3d";
+    rr(x, y, cs, cs, cs * .18);
+    g.fill();
+  }
+
+  const bottom = top + size + 92;
+  g.fillStyle = "#e8ecf5";
+  g.font = F;
+  g.fillText(`${byPlayer.filter(Boolean).length}/4 բառ · ${fmt(elapsed)}` +
+             (hints ? ` · ${hints} հուշում` : " · առանց հուշման"), S / 2, bottom);
+  g.fillStyle = "#8a93a8";
+  g.font = F.replace("40px", "30px");
+  g.fillText(SITE.replace(/^https?:\/\//, ""), S / 2, bottom + 54);
+
+  return new Promise(res => cv.toBlob(res, "image/png"));
+}
+
+$("copyText").onclick = async () => toast(await copyResult() ? "Տեքստը պատճենվեց" : "Չհաջողվեց պատճենել");
+
+$("shareNative").onclick = async () => {
+  const text = resultText();
+  try {
+    const blob = await resultCard();
+    const file = new File([blob], "olor.png", {type: "image/png"});
+    if (navigator.canShare?.({files: [file]})) {
+      await navigator.share({files: [file], text});
+      return;
+    }
+    await navigator.share({title: "ՈԼՈՐ", text, url: SITE});
+  } catch (e) {
+    if (e?.name !== "AbortError") toast("Կիսվելը չհաջողվեց");
+  }
+};
+
+$("shareLinkedIn").onclick = async () => {
+  await copyResult();
+  toast("Տեքստը պատճենվեց — տեղադրի՛ր գրառման մեջ");
+  setTimeout(() => window.open(
+    "https://www.linkedin.com/feed/?shareActive=true&shareUrl=" + encodeURIComponent(SITE),
+    "_blank", "noopener"), 900);
+};
+
+$("shareInstagram").onclick = async () => {
+  const blob = await resultCard();
+  const file = new File([blob], "olor.png", {type: "image/png"});
+  if (navigator.canShare?.({files: [file]})) {
+    try {
+      await navigator.share({files: [file]});
+      return;
+    } catch (e) { if (e?.name === "AbortError") return; }
+  }
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `olor-${MODE === "daily" ? puzzleNo(today) : "random"}.png`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  toast("Նկարը ներբեռնվեց — վերբեռնի՛ր Instagram-ում");
+};
+
+/* ── Buttons ─────────────────────────────────────────────────────────── */
+$("hint").onclick = () => {
+  if (over) return;
+  const open = puzzle.words.map((w, i) => i)
+    .filter(i => !solved[i] && revealed[i] < puzzle.words[i].seq.length);
+  if (!open.length) return;
+  open.sort((a, b) => revealed[a] - revealed[b]);
+  revealed[open[0]]++;
+  hints++;
+  persist();
+  render();
+};
+$("reveal").onclick = () => {
+  if (over) return;
+  solved = solved.map(() => true);
+  trace = [];
+  finish(false);
+};
+$("newgame").onclick = newGame;
+$("result").onclick = showResult;
+$("closeWin").onclick = () => { win.classList.add("hidden"); updateHint(); };
+win.addEventListener("pointerdown", e => {
+  if (e.target === win) { win.classList.add("hidden"); updateHint(); }
+});
+
+/* ── "scroll for more" nudge ─────────────────────────────────────────── */
+const hint = $("scrollhint");
+function updateHint() {
+  const left = document.documentElement.scrollHeight - window.innerHeight - window.scrollY;
+  const show = left > 60 && !$("how").open && win.classList.contains("hidden");
+  hint.classList.toggle("hidden", !show);
+}
+hint.onclick = () => {
+  $("how").open = true;
+  $("how").scrollIntoView({behavior: "smooth", block: "center"});
+  updateHint();
+};
+addEventListener("scroll", updateHint, {passive: true});
+addEventListener("resize", updateHint);
+$("how").addEventListener("toggle", updateHint);
+new ResizeObserver(updateHint).observe(document.body);
+
+/* ── PWA ─────────────────────────────────────────────────────────────── */
+if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+}
+let installEvent = null;
+window.addEventListener("beforeinstallprompt", e => {
+  e.preventDefault();
+  installEvent = e;
+  $("install").classList.remove("hidden");
+});
+$("install").onclick = async () => {
+  if (!installEvent) return;
+  installEvent.prompt();
+  installEvent = null;
+  $("install").classList.add("hidden");
+};
+
+newGame();
+</script>
+</body>
+</html>
