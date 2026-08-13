@@ -1,7 +1,7 @@
 /* Offline app shell. Bump CACHE on every deploy so clients pick up changes. */
-const CACHE = "olor-v1";
+const CACHE = "olor-v2";
 const SHELL = [
-  ".", "index.html", "words.js", "manifest.webmanifest",
+  ".", "index.html", "words.js", "manifest.webmanifest", "city.webp", "city-sm.webp",
   "icon-192.png", "icon-512.png", "icon-maskable-512.png", "apple-touch-icon.png"
 ];
 
