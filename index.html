@@ -6,6 +6,7 @@
 <title>ՈԼՈՐ — հայերեն բառախաղ</title>
 <meta name="description" content="Օրվա հայերեն բառախաղ։ Գտի՛ր 4 բառը՝ 3, 4, 5 և 6 տառանոց, ոլորվող ճանապարհներով 5×5 դաշտում։">
 <meta name="theme-color" content="#0d1017">
+<meta name="color-scheme" content="dark">
 
 <!-- link preview (LinkedIn / Facebook / iMessage) -->
 <meta property="og:type" content="website">
@@ -25,6 +26,7 @@
 <meta name="apple-mobile-web-app-title" content="ՈԼՈՐ">
 <style>
   :root{
+    color-scheme:dark;      /* stops Chrome Auto Dark Theme re-tinting the board */
     --bg:#0d1017;
     --card:#171d2b;
     --tile:#232b3d;
@@ -411,8 +413,14 @@ const dayKey = (d = new Date()) =>
 const dayStartUTC = key => Date.parse(key + "T00:00:00Z") - TZ_OFFSET_H * 3600e3;
 const puzzleNo = key => Math.round((dayStartUTC(key) - dayStartUTC(EPOCH)) / 86400e3) + 1;
 const prevDay = key => dayKey(new Date(dayStartUTC(key) - 1000));
-const armDate = key => new Intl.DateTimeFormat("hy-AM", {day: "numeric", month: "long"})
-  .format(new Date(dayStartUTC(key) + 12 * 3600e3));
+/* Written out rather than left to Intl: some browsers ship without hy locale
+   data and silently fall back to English. */
+const MONTHS_HY = ["հունվարի", "փետրվարի", "մարտի", "ապրիլի", "մայիսի", "հունիսի",
+                   "հուլիսի", "օգոստոսի", "սեպտեմբերի", "հոկտեմբերի", "նոյեմբերի", "դեկտեմբերի"];
+const armDate = key => {
+  const [, m, d] = key.split("-").map(Number);
+  return `${MONTHS_HY[m - 1]} ${d}`;
+};
 
 /* ── Grid ────────────────────────────────────────────────────────────── */
 const N = 5, CELLS = N * N;
@@ -952,9 +960,9 @@ async function copyResult() {
   }
 }
 
-/* A fixed decorative board — the same every day, spelling ողջույն / գիշեր /
-   լույս / բառ. It looks like the game without revealing anything about the
-   day's puzzle, unlike a real board diagram. */
+/* A fixed decorative board — the same shape every day, drawn with connectors
+   and arrows but no letters, so it looks like a finished game while revealing
+   nothing about the day's puzzle. */
 const CARD_BOARD = [
   {word: "բառ",     path: [11, 12, 13]},
   {word: "լույս",   path: [14, 19, 24, 23]},
@@ -1005,6 +1013,18 @@ function resultCard() {
   };
   const cell = i => [pad + (i % 5) * (cs + gap), top + ((i / 5) | 0) * (cs + gap)];
 
+  // solid connectors filling each gap, exactly like a solved word in game.
+  // Drawn per step as an axis-aligned rect, so corners never bulge.
+  CARD_BOARD.forEach((b, idx) => {
+    g.fillStyle = col(idx);
+    for (let k = 1; k < b.path.length; k++) {
+      const [x1, y1] = cell(b.path[k - 1]), [x2, y2] = cell(b.path[k]);
+      // only the gap itself, full tile width — so the tiles keep their
+      // rounded outer corners, exactly as on the board
+      if (y1 === y2) g.fillRect(Math.min(x1, x2) + cs - .5, y1, gap + 1, cs);
+      else           g.fillRect(x1, Math.min(y1, y2) + cs - .5, cs, gap + 1);
+    }
+  });
   for (let i = 0; i < CELLS; i++) {
     const [bx, by] = cell(i);
     const w = CARD_BOARD.findIndex(b => b.path.includes(i));
@@ -1012,30 +1032,25 @@ function resultCard() {
     rr(bx, by, cs, cs, cs * .18);
     g.fill();
   }
-  // connecting lines, like the solved paths in game
-  g.lineCap = "round"; g.lineJoin = "round";
-  g.strokeStyle = "#0d1017"; g.globalAlpha = .35; g.lineWidth = cs * .1;
+  // white direction chevrons in the gaps. No letters at all, so the card
+  // shows the shape of a finished game and gives nothing away.
+  g.strokeStyle = "#fff";
+  g.lineWidth = Math.max(3, cs * .05);
+  g.lineCap = "round";
+  g.lineJoin = "round";
   CARD_BOARD.forEach(b => {
-    g.beginPath();
-    b.path.forEach((i, k) => {
-      const [bx, by] = cell(i);
-      k ? g.lineTo(bx + cs / 2, by + cs / 2) : g.moveTo(bx + cs / 2, by + cs / 2);
-    });
-    g.stroke();
+    for (let k = 1; k < b.path.length; k++) {
+      const [x1, y1] = cell(b.path[k - 1]), [x2, y2] = cell(b.path[k]);
+      const mx = (x1 + x2) / 2 + cs / 2, my = (y1 + y2) / 2 + cs / 2;
+      const dx = Math.sign(x2 - x1), dy = Math.sign(y2 - y1);
+      const px = -dy, py = dx, A = cs * .05, B = cs * .12;
+      g.beginPath();
+      g.moveTo(mx - dx * A + px * B, my - dy * A + py * B);
+      g.lineTo(mx + dx * A, my + dy * A);
+      g.lineTo(mx - dx * A - px * B, my - dy * A - py * B);
+      g.stroke();
+    }
   });
-  g.globalAlpha = 1;
-  // letters
-  CARD_BOARD.forEach(b => {
-    const seq = letters(b.word);
-    g.fillStyle = "#0d1017";
-    b.path.forEach((i, k) => {
-      const [bx, by] = cell(i);
-      g.font = `700 ${Math.round(cs * (seq[k].length > 1 ? .38 : .52))}px ${FAM}`;
-      g.textBaseline = "middle";
-      g.fillText(seq[k], bx + cs / 2, by + cs / 2 + cs * .02);
-    });
-  });
-  g.textBaseline = "alphabetic";
 
   // the player's result — board bottom sits at 1002, URL baseline at 1300
   g.fillStyle = "#e8ecf5";
