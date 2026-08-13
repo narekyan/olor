@@ -484,6 +484,7 @@ const cy = i => ((i / N) | 0) * (CS + GAP) + CS / 2;
 
 let puzzle, cellEls = [], trace = [], dragging = false, moved = false;
 let solved = [], byPlayer = [], revealed = [], hints = 0, over = false, gaveUp = false;
+let resultSeen = false;   // the sheet auto-opens once, then only via the button
 let today = dayKey(), elapsed = 0, running = false, lastTs = 0, tick = null;
 
 function newGame() {
@@ -497,7 +498,7 @@ function newGame() {
   solved = puzzle.words.map(() => false);
   byPlayer = puzzle.words.map(() => false);
   revealed = puzzle.words.map(() => 0);
-  hints = 0; trace = []; over = false; gaveUp = false; elapsed = 0;
+  hints = 0; trace = []; over = false; gaveUp = false; elapsed = 0; resultSeen = false;
 
   win.classList.add("hidden");
   $("hint").disabled = false;
@@ -514,7 +515,9 @@ function newGame() {
   if (MODE === "daily") restore();
   render();
   startTimer();
-  if (over) showResult();
+  // already finished this day in an earlier visit: leave the sheet closed,
+  // the Արդյունք button reopens it
+  if (over && !resultSeen) setTimeout(showResult, 400);
 }
 
 function restore() {
@@ -526,6 +529,7 @@ function restore() {
   if (Array.isArray(p.byPlayer) && p.byPlayer.length === 4) byPlayer = p.byPlayer.slice();
   if (Array.isArray(p.revealed) && p.revealed.length === 4) revealed = p.revealed.slice();
   hints = p.hints | 0;
+  resultSeen = !!p.resultSeen;
   elapsed = p.elapsed | 0;
   gaveUp = !!p.gaveUp;
   over = !!p.over;
@@ -536,7 +540,7 @@ function persist() {
   if (MODE !== "daily") return;
   const st = load();
   st.day = today;
-  st.progress = {solved, byPlayer, revealed, hints, elapsed, over, gaveUp};
+  st.progress = {solved, byPlayer, revealed, hints, elapsed, over, gaveUp, resultSeen};
   save(st);
 }
 
@@ -802,6 +806,8 @@ function showResult() {
 
   $("shareNative").classList.toggle("hidden", !navigator.share);
   win.classList.remove("hidden");
+  resultSeen = true;
+  persist();
   updateCountdown();
   updateHint();
 }
