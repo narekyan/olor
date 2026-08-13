@@ -1200,5 +1200,22 @@ $("install").onclick = async () => {
 
 newGame();
 </script>
+
+<script>
+/* ── Cloudflare Web Analytics ──────────────────────────────────────────────
+   Cookieless and privacy-first, so it needs no consent banner. Paste the site
+   token from dash.cloudflare.com → Analytics & Logs → Web Analytics → your
+   site → "JS snippet". While this is empty nothing loads and nothing is sent,
+   so the game keeps working offline and for anyone blocking third parties. */
+const CF_ANALYTICS_TOKEN = "";
+
+if (CF_ANALYTICS_TOKEN) {
+  const beacon = document.createElement("script");
+  beacon.defer = true;
+  beacon.src = "https://static.cloudflareinsights.com/beacon.min.js";
+  beacon.setAttribute("data-cf-beacon", JSON.stringify({token: CF_ANALYTICS_TOKEN}));
+  document.head.appendChild(beacon);
+}
+</script>
 </body>
 </html>
