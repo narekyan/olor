@@ -826,7 +826,10 @@ function submit() {
     trace = [];
     persist();
     render();
-    if (solved.every(Boolean)) finish(true);
+    if (solved.every(Boolean)) {
+      window.track?.(hints ? "solved/with-hints" : "solved/no-hints");
+      finish(true);
+    }
   } else {
     board.classList.add("shake");
     setTimeout(() => board.classList.remove("shake"), 340);
@@ -1074,9 +1077,13 @@ function resultCard() {
   return new Promise(res => cv.toBlob(res, "image/png"));
 }
 
-$("copyText").onclick = async () => toast(await copyResult() ? "Տեքստը պատճենվեց" : "Չհաջողվեց պատճենել");
+$("copyText").onclick = async () => {
+  window.track?.("share/copy-text");
+  toast(await copyResult() ? "Տեքստը պատճենվեց" : "Չհաջողվեց պատճենել");
+};
 
 $("shareNative").onclick = async () => {
+  window.track?.("share/native");
   const text = resultText();
   try {
     const blob = await resultCard();
@@ -1092,6 +1099,7 @@ $("shareNative").onclick = async () => {
 };
 
 $("shareLinkedIn").onclick = async () => {
+  window.track?.("share/linkedin");
   await copyResult();
   toast("Տեքստը պատճենվեց — տեղադրի՛ր գրառման մեջ");
   setTimeout(() => window.open(
@@ -1100,6 +1108,7 @@ $("shareLinkedIn").onclick = async () => {
 };
 
 $("shareInstagram").onclick = async () => {
+  window.track?.("share/instagram");
   const blob = await resultCard();
   const file = new File([blob], "olor.png", {type: "image/png"});
   if (navigator.canShare?.({files: [file]})) {
@@ -1125,6 +1134,7 @@ $("hint").onclick = () => {
   open.sort((a, b) => revealed[a] - revealed[b]);
   revealed[open[0]]++;
   hints++;
+  window.track?.("hint");
   persist();
   render();
 };
@@ -1193,6 +1203,7 @@ window.addEventListener("beforeinstallprompt", e => {
 });
 $("install").onclick = async () => {
   if (!installEvent) return;
+  window.track?.("install");
   installEvent.prompt();
   installEvent = null;
   $("install").classList.add("hidden");
@@ -1208,6 +1219,28 @@ newGame();
    site → "JS snippet". While this is empty nothing loads and nothing is sent,
    so the game keeps working offline and for anyone blocking third parties. */
 const CF_ANALYTICS_TOKEN = "";
+
+/* ── GoatCounter ───────────────────────────────────────────────────────────
+   Cloudflare counts visits but cannot count *actions*. GoatCounter can, and is
+   free and cookieless too. Put your subdomain code here — "olor" if your
+   dashboard is olor.goatcounter.com — and share clicks, finishes and hints get
+   counted as events alongside pageviews. Empty = nothing loads. */
+const GOATCOUNTER_CODE = "";
+
+if (GOATCOUNTER_CODE) {
+  const gc = document.createElement("script");
+  gc.async = true;
+  gc.src = "https://gc.zgo.at/count.js";
+  gc.dataset.goatcounter = `https://${GOATCOUNTER_CODE}.goatcounter.com/count`;
+  document.head.appendChild(gc);
+}
+
+/* Fire a named event. No-op when analytics is not configured or blocked. */
+window.track = function (name) {
+  try {
+    window.goatcounter?.count?.({path: name, title: name, event: true});
+  } catch {}
+};
 
 if (CF_ANALYTICS_TOKEN) {
   const beacon = document.createElement("script");
