@@ -43,6 +43,7 @@
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;min-height:100%}
+  html{overflow-x:hidden}   /* 100vw band must not create a scrollbar */
   body{position:relative}
   body{
     font-family:var(--font);
@@ -98,7 +99,9 @@
      height. Its top/height are synced to .board-wrap in JS, and it sits
      behind the app column, so it reads as a strip the board floats on. */
   .band{
-    position:absolute;left:0;width:100%;z-index:0;pointer-events:none;
+    /* break out of body's padding so it reaches both screen edges */
+    position:absolute;left:50%;width:100vw;transform:translateX(-50%);
+    z-index:0;pointer-events:none;
     background:url("city.webp") center/cover no-repeat;
     -webkit-mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent);
             mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent);
