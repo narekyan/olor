@@ -95,25 +95,56 @@
     backdrop-filter:blur(2px);
     box-shadow:0 18px 50px -20px #000c;
   }
-  /* Yerevan band — spans the full viewport width at exactly the board's
-     height. Its top/height are synced to .board-wrap in JS, and it sits
-     behind the app column, so it reads as a strip the board floats on. */
+
+  /* ── Yerevan artwork ───────────────────────────────────────────────────
+     .band is a full-viewport-width strip whose top/height are synced to the
+     board in JS. Small screens have no gutters, so there it sits behind the
+     translucent board. From 760px up it splits in two: the left half of the
+     image fills the left gutter, the right half fills the right one, so the
+     board looks like it is standing in the middle of the picture. */
   .band{
     /* break out of body's padding so it reaches both screen edges */
     position:absolute;left:50%;width:100vw;transform:translateX(-50%);
     z-index:0;pointer-events:none;
-    background:url("city.webp") center/cover no-repeat;
+    background:url("city-sm.webp") center/cover no-repeat;
     -webkit-mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent);
             mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent);
     opacity:0;transition:opacity .5s
   }
-  /* dark scrim so the light illustration stays readable under the board */
+  .band.on{opacity:1}
+  /* dark scrim, so the light illustration stays theme-safe */
   .band::after{
     content:"";position:absolute;inset:0;
-    background:linear-gradient(#0d1017b3,#0d10173d 45%,#0d1017b3)
+    background:linear-gradient(#0d101799,#0d101724 45%,#0d101799)
   }
-  .band.on{opacity:1}
-  @media (max-width:640px){ .band{background-image:url("city-sm.webp")} }
+  .band i{display:none}
+
+  @media (min-width:760px){
+    .board-wrap{background:var(--card);backdrop-filter:none}
+    .band{background:none;-webkit-mask-image:none;mask-image:none}
+    .band::after{content:none}
+    /* --gutL / --gutR are the measured gaps either side of the board */
+    .band i{
+      display:block;position:absolute;top:0;bottom:0;
+      background-repeat:no-repeat;
+      background-image:
+        linear-gradient(#0d101799,#0d101724 45%,#0d101799),
+        url("city.webp");
+      background-size:100% 100%, 200% auto;   /* 200% ⇒ each side shows one half */
+    }
+    .band .l{
+      left:0;width:var(--gutL,0px);
+      background-position:center, left center;
+      -webkit-mask-image:linear-gradient(90deg,transparent,#000 42%);
+              mask-image:linear-gradient(90deg,transparent,#000 42%);
+    }
+    .band .r{
+      right:0;width:var(--gutR,0px);
+      background-position:center, right center;
+      -webkit-mask-image:linear-gradient(270deg,transparent,#000 42%);
+              mask-image:linear-gradient(270deg,transparent,#000 42%);
+    }
+  }
   .app{position:relative;z-index:1}
 
   .board{
@@ -136,8 +167,11 @@
   /* ու occupies one tile — shrink so the digraph still fits */
   .cell.wide{font-size:clamp(13px,4.1vw,19px)}
   .cell:hover:not(.wall){background:var(--tile-hi)}
-  .cell.wall{background:var(--wall);border-color:#ffffff08;cursor:default;
-    background-image:repeating-linear-gradient(45deg,#ffffff06 0 6px,transparent 6px 12px)}
+  /* the 7 unused squares: barely there, so the board reads as the words */
+  .cell.wall{
+    background:#0f131c40;border-color:#ffffff05;cursor:default;
+    background-image:repeating-linear-gradient(45deg,#ffffff05 0 6px,transparent 6px 12px)
+  }
   .cell.trace{background:var(--tile-hi);box-shadow:0 0 0 2px var(--accent) inset;transform:scale(.965)}
   .cell.locked{color:#0d1017;font-weight:700}
   .cell .dot{position:absolute;top:5px;right:6px;width:6px;height:6px;border-radius:50%;opacity:.9}
@@ -232,7 +266,7 @@
 </style>
 </head>
 <body>
-<div class="band" id="band" aria-hidden="true"></div>
+<div class="band" id="band" aria-hidden="true"><i class="l"></i><i class="r"></i></div>
 <div class="app">
   <header>
     <h1><i>Ո</i><i>Լ</i><i>Ո</i><i>Ր</i></h1>
@@ -1047,6 +1081,9 @@ function syncBand() {
   const r = boardWrap.getBoundingClientRect();
   band.style.top = (r.top + window.scrollY) + "px";
   band.style.height = r.height + "px";
+  // gaps either side of the board — each takes one half of the image
+  band.style.setProperty("--gutL", Math.max(0, Math.round(r.left)) + "px");
+  band.style.setProperty("--gutR", Math.max(0, Math.round(window.innerWidth - r.right)) + "px");
   band.classList.add("on");
 }
 addEventListener("resize", syncBand);
