@@ -648,7 +648,12 @@ function render() {
   });
 
   ov.innerHTML = "";
-  puzzle.words.forEach((w, idx) => { if (solved[idx]) ov.appendChild(poly(w.path, col(idx), 5.5, .55)); });
+  puzzle.words.forEach((w, idx) => {
+    if (!solved[idx]) return;
+    ov.appendChild(poly(w.path, col(idx), 7, 1));           // solid connector
+    for (let k = 1; k < w.path.length; k++)                 // direction arrows
+      ov.appendChild(arrow(w.path[k - 1], w.path[k]));
+  });
   if (trace.length > 1) {
     const accent = getComputedStyle(document.documentElement).getPropertyValue("--accent").trim();
     ov.appendChild(poly(trace, accent, 4.5, .85));
@@ -689,6 +694,29 @@ function render() {
   });
 
   $("found").textContent = `${solved.filter(Boolean).length}/4`;
+}
+
+/* A white chevron in the gap between two tiles, pointing the way the word is
+   read. The gap is the only part of the overlay the tiles don't cover, so the
+   chevron is short across the direction of travel and taller across it. */
+function arrow(from, to) {
+  const mx = (cx(from) + cx(to)) / 2, my = (cy(from) + cy(to)) / 2;
+  const dx = Math.sign(cx(to) - cx(from)), dy = Math.sign(cy(to) - cy(from));
+  const px = -dy, py = dx;                       // perpendicular to travel
+  const A = 1, B = 1.9;                          // reach along / across travel
+  const el = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+  el.setAttribute("points", [
+    [mx - dx * A + px * B, my - dy * A + py * B],
+    [mx + dx * A, my + dy * A],
+    [mx - dx * A - px * B, my - dy * A - py * B],
+  ].map(([x, y]) => `${x},${y}`).join(" "));
+  el.setAttribute("fill", "none");
+  el.setAttribute("stroke", "#fff");
+  el.setAttribute("stroke-width", 1.8);
+  el.setAttribute("stroke-linecap", "round");
+  el.setAttribute("stroke-linejoin", "round");
+  el.setAttribute("vector-effect", "non-scaling-stroke");
+  return el;
 }
 
 function poly(path, color, width, opacity) {
