@@ -90,39 +90,41 @@
 
   .board-wrap{
     position:relative;border-radius:20px;padding:12px;
-    border:1px solid var(--line);
-    background:#171d2bcc;                  /* translucent: the city shows through */
-    backdrop-filter:blur(2px);
+    border:1px solid var(--line);background:var(--card);
     box-shadow:0 18px 50px -20px #000c;
   }
 
   /* ── Yerevan artwork ───────────────────────────────────────────────────
-     .band is a full-viewport-width strip whose top/height are synced to the
-     board in JS. Small screens have no gutters, so there it sits behind the
-     translucent board. From 760px up it splits in two: the left half of the
-     image fills the left gutter, the right half fills the right one, so the
-     board looks like it is standing in the middle of the picture. */
+     Two placements, chosen by width. Narrow screens have no room beside the
+     board, so the image becomes a banner across the top of the page, fading
+     down into the background. From 760px up it splits in two: the left half
+     of the image fills the left gutter and the right half the right one, so
+     the board stands in the middle of the picture. JS positions the element
+     for whichever case is live. */
   .band{
     /* break out of body's padding so it reaches both screen edges */
     position:absolute;left:50%;width:100vw;transform:translateX(-50%);
     z-index:0;pointer-events:none;
-    background:url("city-sm.webp") center/cover no-repeat;
-    -webkit-mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent);
-            mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent);
     opacity:0;transition:opacity .5s
   }
   .band.on{opacity:1}
-  /* dark scrim, so the light illustration stays theme-safe */
-  .band::after{
-    content:"";position:absolute;inset:0;
-    background:linear-gradient(#0d101799,#0d101724 45%,#0d101799)
-  }
   .band i{display:none}
 
+  @media (max-width:759px){
+    body{padding-top:calc(128px + env(safe-area-inset-top))}
+    .band{
+      height:calc(122px + env(safe-area-inset-top));
+      background:url("city-sm.webp") center 40%/cover no-repeat;
+      -webkit-mask-image:linear-gradient(#000 52%,transparent);
+              mask-image:linear-gradient(#000 52%,transparent);
+    }
+    .band::after{
+      content:"";position:absolute;inset:0;
+      background:linear-gradient(#0d10174d,#0d1017b3)
+    }
+  }
+
   @media (min-width:760px){
-    .board-wrap{background:var(--card);backdrop-filter:none}
-    .band{background:none;-webkit-mask-image:none;mask-image:none}
-    .band::after{content:none}
     /* --gutL / --gutR are the measured gaps either side of the board */
     .band i{
       display:block;position:absolute;top:0;bottom:0;
@@ -275,7 +277,6 @@
 
   <div class="bar">
     <div class="stat">Ժամանակ <b id="time">0:00</b></div>
-    <div class="stat">Գտնված <b id="found">0/4</b></div>
     <div class="spacer"></div>
     <button id="hint">Հուշում</button>
     <button id="newgame" class="primary">Նոր խաղ</button>
@@ -650,7 +651,7 @@ function render() {
   ov.innerHTML = "";
   puzzle.words.forEach((w, idx) => {
     if (!solved[idx]) return;
-    ov.appendChild(poly(w.path, col(idx), 7, 1));           // solid connector
+    ov.appendChild(poly(w.path, col(idx), CS / 2, 1, true)); // half a tile thick
     for (let k = 1; k < w.path.length; k++)                 // direction arrows
       ov.appendChild(arrow(w.path[k - 1], w.path[k]));
   });
@@ -693,7 +694,6 @@ function render() {
     wordsEl.appendChild(chip);
   });
 
-  $("found").textContent = `${solved.filter(Boolean).length}/4`;
 }
 
 /* A white chevron in the gap between two tiles, pointing the way the word is
@@ -703,7 +703,7 @@ function arrow(from, to) {
   const mx = (cx(from) + cx(to)) / 2, my = (cy(from) + cy(to)) / 2;
   const dx = Math.sign(cx(to) - cx(from)), dy = Math.sign(cy(to) - cy(from));
   const px = -dy, py = dx;                       // perpendicular to travel
-  const A = 1, B = 1.9;                          // reach along / across travel
+  const A = 1, B = 2.8;                          // reach along / across travel
   const el = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
   el.setAttribute("points", [
     [mx - dx * A + px * B, my - dy * A + py * B],
@@ -712,14 +712,14 @@ function arrow(from, to) {
   ].map(([x, y]) => `${x},${y}`).join(" "));
   el.setAttribute("fill", "none");
   el.setAttribute("stroke", "#fff");
-  el.setAttribute("stroke-width", 1.8);
+  el.setAttribute("stroke-width", 2.2);
   el.setAttribute("stroke-linecap", "round");
   el.setAttribute("stroke-linejoin", "round");
   el.setAttribute("vector-effect", "non-scaling-stroke");
   return el;
 }
 
-function poly(path, color, width, opacity) {
+function poly(path, color, width, opacity, scaled) {
   const el = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
   el.setAttribute("points", path.map(i => `${cx(i)},${cy(i)}`).join(" "));
   el.setAttribute("fill", "none");
@@ -728,7 +728,8 @@ function poly(path, color, width, opacity) {
   el.setAttribute("stroke-opacity", opacity);
   el.setAttribute("stroke-linecap", "round");
   el.setAttribute("stroke-linejoin", "round");
-  el.setAttribute("vector-effect", "non-scaling-stroke");
+  // scaled: width is in board units (scales with the board); otherwise px
+  if (!scaled) el.setAttribute("vector-effect", "non-scaling-stroke");
   return el;
 }
 
@@ -1106,12 +1107,18 @@ win.addEventListener("pointerdown", e => {
 /* ── Yerevan band, aligned to the board ──────────────────────────────── */
 const band = $("band"), boardWrap = document.querySelector(".board-wrap");
 function syncBand() {
-  const r = boardWrap.getBoundingClientRect();
-  band.style.top = (r.top + window.scrollY) + "px";
-  band.style.height = r.height + "px";
-  // gaps either side of the board — each takes one half of the image
-  band.style.setProperty("--gutL", Math.max(0, Math.round(r.left)) + "px");
-  band.style.setProperty("--gutR", Math.max(0, Math.round(window.innerWidth - r.right)) + "px");
+  if (window.innerWidth < 760) {
+    // banner across the top; CSS owns the height
+    band.style.top = "0px";
+    band.style.height = "";
+  } else {
+    // strip aligned to the board, split into the two gutters
+    const r = boardWrap.getBoundingClientRect();
+    band.style.top = (r.top + window.scrollY) + "px";
+    band.style.height = r.height + "px";
+    band.style.setProperty("--gutL", Math.max(0, Math.round(r.left)) + "px");
+    band.style.setProperty("--gutR", Math.max(0, Math.round(window.innerWidth - r.right)) + "px");
+  }
   band.classList.add("on");
 }
 addEventListener("resize", syncBand);
