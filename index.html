@@ -650,7 +650,7 @@ function render() {
   ov.innerHTML = "";
   puzzle.words.forEach((w, idx) => {
     if (!solved[idx]) return;
-    ov.appendChild(poly(w.path, col(idx), CS / 2, 1, true)); // half a tile thick
+    ov.appendChild(poly(w.path, col(idx), CS, 1, true));     // as wide as a tile
     for (let k = 1; k < w.path.length; k++)                 // direction arrows
       ov.appendChild(arrow(w.path[k - 1], w.path[k]));
   });
@@ -702,7 +702,7 @@ function arrow(from, to) {
   const mx = (cx(from) + cx(to)) / 2, my = (cy(from) + cy(to)) / 2;
   const dx = Math.sign(cx(to) - cx(from)), dy = Math.sign(cy(to) - cy(from));
   const px = -dy, py = dx;                       // perpendicular to travel
-  const A = 1, B = 2.8;                          // reach along / across travel
+  const A = 1, B = 4.2;                          // reach along / across travel
   const el = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
   el.setAttribute("points", [
     [mx - dx * A + px * B, my - dy * A + py * B],
@@ -711,7 +711,7 @@ function arrow(from, to) {
   ].map(([x, y]) => `${x},${y}`).join(" "));
   el.setAttribute("fill", "none");
   el.setAttribute("stroke", "#fff");
-  el.setAttribute("stroke-width", 2.2);
+  el.setAttribute("stroke-width", 2.6);
   el.setAttribute("stroke-linecap", "round");
   el.setAttribute("stroke-linejoin", "round");
   el.setAttribute("vector-effect", "non-scaling-stroke");
