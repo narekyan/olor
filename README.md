@@ -44,14 +44,17 @@ Home Screen*. It then launches fullscreen with its own icon and works offline.
 
 ## The word list
 
-`words.js` holds 692 words bucketed by letter count (135 / 186 / 205 / 166).
+`words.js` holds 644 words bucketed by letter count (133 / 171 / 192 / 148).
 Every word:
 
 - is a base form in the Eastern Armenian Hunspell dictionary
   ([wooorm/dictionaries → `hy`](https://github.com/wooorm/dictionaries), 67k entries),
 - appears at least twice in an Armenian frequency list
   ([hermitdave/FrequencyWords → `2018/hy`](https://github.com/hermitdave/FrequencyWords)),
-- is written only in lowercase Armenian letters, so no proper nouns.
+- is written only in lowercase Armenian letters, so no proper nouns,
+- is a dictionary form, not an inflection — 48 case, tense and possessive forms
+  that the frequency list had promoted (ablatives like `քեզնից`, past tenses
+  like `ասաց`, definites like `սերը`) were removed by hand.
 
 Words are ordered most-frequent-first and each bucket has a marker comment where
 the rarer tail begins — delete from a marker down to the end of that bucket to
