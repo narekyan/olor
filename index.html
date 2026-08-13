@@ -57,11 +57,13 @@
   .app{width:100%;max-width:460px}
 
   header{display:flex;align-items:center;gap:10px;margin:0 2px 14px}
-  h1{
-    font-size:29px;letter-spacing:.22em;margin:0;font-weight:700;line-height:1;
-    background:linear-gradient(100deg,#7dd3fc,#a78bfa 45%,#fb7185);
-    -webkit-background-clip:text;background-clip:text;color:transparent;
-  }
+  h1{font-size:30px;letter-spacing:.22em;margin:0;font-weight:700;line-height:1;display:flex}
+  /* one letter per solved-word colour, so the logo mirrors the board */
+  h1 i{font-style:normal}
+  h1 i:nth-child(1){color:var(--w0)}
+  h1 i:nth-child(2){color:var(--w1)}
+  h1 i:nth-child(3){color:var(--w2)}
+  h1 i:nth-child(4){color:var(--w3)}
   .sub{font-size:11.5px;color:var(--muted);letter-spacing:.03em;line-height:1.45}
   .sub b{color:#b9c2d6;font-weight:600}
 
@@ -207,7 +209,7 @@
 <body>
 <div class="app">
   <header>
-    <h1>ՈԼՈՐ</h1>
+    <h1><i>Ո</i><i>Լ</i><i>Ո</i><i>Ր</i></h1>
     <div class="sub" id="subtitle"></div>
   </header>
 
@@ -228,7 +230,7 @@
 
   <div class="words" id="words"></div>
 
-  <details class="how" id="how">
+  <details class="how" id="how" open>
   <summary>Ինչպես խաղալ<span class="chev">⌄</span></summary>
   <p class="help">
     Գտի՛ր <b>4 բառ</b>՝ 3, 4, 5 և 6 տառանոց։ Ամեն բառ գրված է ոլորվող ճանապարհով՝
@@ -964,14 +966,15 @@ win.addEventListener("pointerdown", e => {
 /* ── "scroll for more" nudge ─────────────────────────────────────────── */
 const hint = $("scrollhint");
 function updateHint() {
-  const left = document.documentElement.scrollHeight - window.innerHeight - window.scrollY;
-  const show = left > 60 && !$("how").open && win.classList.contains("hidden");
+  // nudge only while the how-to-play panel is still below the fold
+  const top = $("how").getBoundingClientRect().top;
+  const show = top > window.innerHeight - 40 && win.classList.contains("hidden");
   hint.classList.toggle("hidden", !show);
 }
 hint.onclick = () => {
   $("how").open = true;
   $("how").scrollIntoView({behavior: "smooth", block: "center"});
-  updateHint();
+  setTimeout(updateHint, 600);
 };
 addEventListener("scroll", updateHint, {passive: true});
 addEventListener("resize", updateHint);
