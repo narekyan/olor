@@ -128,8 +128,8 @@
       background:linear-gradient(#0d1017cc,#0d1017ab 28%,#0d10173d 58%,#0d101733)
     }
     /* keep the header legible over the light parts of the sky */
-    h1,.sub,.stat,.barnext{text-shadow:0 2px 10px #0d1017e6}
-    .stat,button{background:#171d2be6}
+    h1,.sub,.stat{text-shadow:0 2px 10px #0d1017e6}
+    .stat,button,.barnext span{background:#171d2be6}
   }
 
   @media (min-width:760px){
@@ -246,8 +246,9 @@
     position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));
     transform:translateX(-50%);z-index:8;
     background:#1f2740ee;border:1px solid #3a465f;backdrop-filter:blur(6px);
-    font-size:14.5px;font-weight:600;color:#c7d0e4;padding:11px 19px;border-radius:999px;
-    display:flex;align-items:center;gap:8px;box-shadow:0 10px 30px -12px #000;
+    font-size:14.5px;font-weight:600;color:#c7d0e4;padding:11px 34px;border-radius:999px;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    min-width:min(300px,78vw);box-shadow:0 10px 30px -12px #000;
     animation:bob 1.9s ease-in-out infinite;transition:opacity .25s
   }
   .scrollhint span{font-size:18px;line-height:1}
@@ -276,11 +277,19 @@
   .statgrid b{display:block;font-size:19px;font-variant-numeric:tabular-nums}
   .statgrid small{font-size:10px;color:var(--muted)}
   .sharebtns{display:flex;flex-direction:column;gap:8px}
+  /* just a heading for the network buttons below it, not a control */
+  .sharelabel{font-size:12px;color:var(--muted);text-align:center;margin:2px 0 1px}
   .sharebtns .two{display:flex;gap:8px}
   .sharebtns .two button{flex:1}
   .next{font-size:11.5px;color:var(--muted);margin:14px 0 0;font-variant-numeric:tabular-nums}
-  /* the same countdown, tucked under the Արդյունք button on the main screen */
-  .barnext{flex-basis:100%;margin:0;text-align:right}
+  /* the same countdown, tucked under the Արդյունք button on the main screen,
+     wearing that button's chip */
+  .barnext{flex-basis:100%;display:flex;justify-content:flex-end;margin:0}
+  .barnext span{
+    background:#1f2740;border:1px solid #3a465f;border-radius:11px;
+    padding:7px 11px;font-size:11.5px;color:var(--muted);
+    font-variant-numeric:tabular-nums
+  }
   .toast{
     position:fixed;left:50%;bottom:26px;transform:translate(-50%,14px);
     background:#e8ecf5;color:#0d1017;font-size:13px;font-weight:600;
@@ -305,7 +314,7 @@
     <button id="hint">Հուշում</button>
     <button id="newgame" class="primary">Նոր խաղ</button>
     <button id="result" class="primary hidden">Արդյունք</button>
-    <p class="next barnext hidden" id="nextInMain"></p>
+    <div class="barnext hidden" id="nextInRow"><span id="nextInMain"></span></div>
   </div>
 
   <div class="board-wrap">
@@ -341,7 +350,7 @@
     <div class="winwords" id="winWords"></div>
     <div class="statgrid" id="winStats"></div>
     <div class="sharebtns">
-      <button class="cta" id="shareNative">Կիսվել</button>
+      <div class="sharelabel">Կիսվել</div>
       <div class="two">
         <button id="shareLinkedIn">LinkedIn</button>
         <button id="shareInstagram">Instagram</button>
@@ -565,13 +574,14 @@ function newGame() {
 
   win.classList.add("hidden");
   $("hint").disabled = false;
+  $("hint").classList.remove("hidden");
   $("reveal").disabled = false;
   // Daily is a single shared puzzle: no reroll, no giving up.
   $("newgame").classList.toggle("hidden", MODE === "daily");
   $("reveal").classList.toggle("hidden", MODE === "daily");
   $("result").classList.add("hidden");
   $("subtitle").innerHTML = MODE === "daily"
-    ? `հայերեն բառախաղ · <b>#${puzzleNo(today)}</b> · 5×5<br>${armDate(today)}`
+    ? `հայերեն բառախաղ · 5×5 · <b>#${puzzleNo(today)}</b><br>${armDate(today)}`
     : "հայերեն բառախաղ · պատահական · 5×5";
 
   buildBoard();
@@ -597,7 +607,8 @@ function restore() {
   elapsed = p.elapsed | 0;
   gaveUp = !!p.gaveUp;
   over = !!p.over;
-  if (over) { $("hint").disabled = true; $("reveal").disabled = true; $("result").classList.remove("hidden"); }
+  // nothing left to hint at once the day is done
+  if (over) { $("hint").classList.add("hidden"); $("reveal").disabled = true; $("result").classList.remove("hidden"); }
 }
 
 function persist() {
@@ -851,7 +862,7 @@ function finish(won) {
   over = true;
   gaveUp = !won;
   running = false;
-  $("hint").disabled = true;
+  $("hint").classList.add("hidden");
   $("reveal").disabled = true;
   $("result").classList.remove("hidden");
 
@@ -900,8 +911,8 @@ function showResult() {
   });
 
   const st = load(), s = st.stats || {};
+  // no found-word count: the list above already says which words were found
   const cells = [
-    [won ? `${byPlayer.filter(Boolean).length}/4` : `${byPlayer.filter(Boolean).length}/4`, "գտնված բառ"],
     [fmt(elapsed), "ժամանակ"],
     [String(hints), "հուշում"],
   ];
@@ -909,7 +920,6 @@ function showResult() {
   $("winStats").innerHTML = cells
     .map(([v, l]) => `<div><b>${v}</b><small>${l}</small></div>`).join("");
 
-  $("shareNative").classList.toggle("hidden", !navigator.share);
   win.classList.remove("hidden");
   resultSeen = true;
   persist();
@@ -924,7 +934,7 @@ function updateCountdown() {
   // the sheet and the main screen show the same line; both only once the
   // day's puzzle is done
   const show = MODE === "daily" && over;
-  main.classList.toggle("hidden", !show);
+  $("nextInRow").classList.toggle("hidden", !show);
   if (!show) { el.textContent = ""; main.textContent = ""; return; }
   const paint = () => {
     const left = Math.max(0, dayStartUTC(today) + 86400e3 - Date.now());
@@ -1036,10 +1046,11 @@ function resultCard() {
     g.fillStyle = col(idx);
     for (let k = 1; k < b.path.length; k++) {
       const [x1, y1] = cell(b.path[k - 1]), [x2, y2] = cell(b.path[k]);
-      // only the gap itself, full tile width — so the tiles keep their
-      // rounded outer corners, exactly as on the board
-      if (y1 === y2) g.fillRect(Math.min(x1, x2) + cs - .5, y1, gap + 1, cs);
-      else           g.fillRect(x1, Math.min(y1, y2) + cs - .5, cs, gap + 1);
+      // only the gap itself, and half a tile wide so the connector reads as a
+      // bridge between the squares rather than a solid block
+      const t = cs * .5, o = (cs - t) / 2;
+      if (y1 === y2) g.fillRect(Math.min(x1, x2) + cs - .5, y1 + o, gap + 1, t);
+      else           g.fillRect(x1 + o, Math.min(y1, y2) + cs - .5, t, gap + 1);
     }
   });
   for (let i = 0; i < CELLS; i++) {
@@ -1094,22 +1105,6 @@ function resultCard() {
 $("copyText").onclick = async () => {
   window.track?.("share/copy-text");
   toast(await copyResult() ? "Տեքստը պատճենվեց" : "Չհաջողվեց պատճենել");
-};
-
-$("shareNative").onclick = async () => {
-  window.track?.("share/native");
-  const text = resultText();
-  try {
-    const blob = await resultCard();
-    const file = new File([blob], "olor.png", {type: "image/png"});
-    if (navigator.canShare?.({files: [file]})) {
-      await navigator.share({files: [file], text});
-      return;
-    }
-    await navigator.share({title: "ՈԼՈՐ", text, url: SITE});
-  } catch (e) {
-    if (e?.name !== "AbortError") toast("Կիսվելը չհաջողվեց");
-  }
 };
 
 $("shareLinkedIn").onclick = async () => {
