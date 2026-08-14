@@ -78,6 +78,10 @@
     display:flex;gap:7px;align-items:center
   }
   .stat b{color:var(--txt);font-weight:600;font-variant-numeric:tabular-nums}
+  /* the countdown is information, not an action: keep the chip's shape but
+     drop the border that makes it read as a button */
+  .stat.soft{background:#ffffff0a;border-color:transparent}
+  .stat.soft b{color:#b9c2d6}
   .spacer{flex:1}
   button{
     font-family:var(--font);font-size:13px;color:var(--txt);cursor:pointer;
@@ -303,7 +307,7 @@
   <div class="bar">
     <div class="stat" id="timeStat">Ժամանակ <b id="time">0:00</b></div>
     <!-- takes the timer's place once the day's puzzle is done -->
-    <div class="stat hidden" id="nextInRow">Հաջորդ խաղը <b id="nextInMain"></b></div>
+    <div class="stat soft hidden" id="nextInRow">Հաջորդ խաղը <b id="nextInMain"></b></div>
     <div class="spacer"></div>
     <button id="hint">Հուշում</button>
     <button id="newgame" class="primary">Նոր խաղ</button>
