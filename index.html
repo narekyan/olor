@@ -129,7 +129,7 @@
     }
     /* keep the header legible over the light parts of the sky */
     h1,.sub,.stat{text-shadow:0 2px 10px #0d1017e6}
-    .stat,button,.barnext span{background:#171d2be6}
+    .stat,button{background:#171d2be6}
   }
 
   @media (min-width:760px){
@@ -282,14 +282,6 @@
   .sharebtns .two{display:flex;gap:8px}
   .sharebtns .two button{flex:1}
   .next{font-size:11.5px;color:var(--muted);margin:14px 0 0;font-variant-numeric:tabular-nums}
-  /* the same countdown, tucked under the Արդյունք button on the main screen,
-     wearing that button's chip */
-  .barnext{flex-basis:100%;display:flex;justify-content:flex-end;margin:0}
-  .barnext span{
-    background:#1f2740;border:1px solid #3a465f;border-radius:11px;
-    padding:7px 11px;font-size:11.5px;color:var(--muted);
-    font-variant-numeric:tabular-nums
-  }
   .toast{
     position:fixed;left:50%;bottom:26px;transform:translate(-50%,14px);
     background:#e8ecf5;color:#0d1017;font-size:13px;font-weight:600;
@@ -309,12 +301,13 @@
   </header>
 
   <div class="bar">
-    <div class="stat">Ժամանակ <b id="time">0:00</b></div>
+    <div class="stat" id="timeStat">Ժամանակ <b id="time">0:00</b></div>
+    <!-- takes the timer's place once the day's puzzle is done -->
+    <div class="stat hidden" id="nextInRow">Հաջորդ խաղը <b id="nextInMain"></b></div>
     <div class="spacer"></div>
     <button id="hint">Հուշում</button>
     <button id="newgame" class="primary">Նոր խաղ</button>
     <button id="result" class="primary hidden">Արդյունք</button>
-    <div class="barnext hidden" id="nextInRow"><span id="nextInMain"></span></div>
   </div>
 
   <div class="board-wrap">
@@ -931,16 +924,18 @@ let cdTimer = null;
 function updateCountdown() {
   clearInterval(cdTimer);
   const el = $("nextIn"), main = $("nextInMain");
-  // the sheet and the main screen show the same line; both only once the
-  // day's puzzle is done
+  // the sheet and the main screen run off the same tick; once the day's
+  // puzzle is done the countdown takes the timer's slot in the bar
   const show = MODE === "daily" && over;
   $("nextInRow").classList.toggle("hidden", !show);
+  $("timeStat").classList.toggle("hidden", show);
   if (!show) { el.textContent = ""; main.textContent = ""; return; }
   const paint = () => {
     const left = Math.max(0, dayStartUTC(today) + 86400e3 - Date.now());
     const h = Math.floor(left / 3600e3), m = Math.floor(left % 3600e3 / 60e3), sec = Math.floor(left % 60e3 / 1000);
-    el.textContent = main.textContent =
-      `Հաջորդ խաղը՝ ${h}ժ ${String(m).padStart(2, "0")}ր ${String(sec).padStart(2, "0")}վ`;
+    const dur = `${h}ժ ${String(m).padStart(2, "0")}ր ${String(sec).padStart(2, "0")}վ`;
+    main.textContent = dur;
+    el.textContent = `Հաջորդ խաղը՝ ${dur}`;
     if (left <= 0) { clearInterval(cdTimer); newGame(); }
   };
   paint();
@@ -955,7 +950,7 @@ function streakLine() {
 }
 function resultText() {
   const head = MODE === "daily" ? `ՈԼՈՐ #${puzzleNo(today)}` : "ՈԼՈՐ";
-  const meta = `${byPlayer.filter(Boolean).length}/4 բառ · ${fmt(elapsed)}` +
+  const meta = `${byPlayer.filter(Boolean).length}/4 բառ · ⏱️ ${fmt(elapsed)}` +
                (hints ? ` · ${hints} հուշում` : " · առանց հուշման");
   // Deliberately no board diagram: it would give away the walls and the
   // tiling, which is most of the puzzle.
@@ -1083,7 +1078,20 @@ function resultCard() {
   // the player's result — board bottom sits at 1002, URL baseline at 1300
   g.fillStyle = "#e8ecf5";
   g.font = `700 120px ${FAM}`;
-  g.fillText(fmt(elapsed), W / 2, 1112);
+  // clock face drawn by hand, then the time — the pair centred as one block
+  const tTxt = fmt(elapsed), tW = g.measureText(tTxt).width;
+  const R = 42, GAP = 26, blockW = R * 2 + GAP + tW, left = W / 2 - blockW / 2;
+  const ccx = left + R, ccy = 1112 - 42;
+  g.textAlign = "left";
+  g.fillText(tTxt, left + R * 2 + GAP, 1112);
+  g.textAlign = "center";
+  g.strokeStyle = "#e8ecf5";
+  g.lineWidth = 8;
+  g.beginPath(); g.arc(ccx, ccy, R - 4, 0, Math.PI * 2); g.stroke();
+  g.beginPath();
+  g.moveTo(ccx, ccy); g.lineTo(ccx, ccy - R * .52);
+  g.moveTo(ccx, ccy); g.lineTo(ccx + R * .4, ccy);
+  g.stroke();
   g.font = `600 38px ${FAM}`;
   g.fillText(`${byPlayer.filter(Boolean).length}/4 բառ` +
              (hints ? ` · ${hints} հուշում` : " · առանց հուշման"), W / 2, 1172);
