@@ -284,7 +284,6 @@
   .sharelabel{font-size:12px;color:var(--muted);text-align:center;margin:2px 0 1px}
   .sharebtns .two{display:flex;gap:8px}
   .sharebtns .two button{flex:1}
-  .next{font-size:11.5px;color:var(--muted);margin:14px 0 0;font-variant-numeric:tabular-nums}
   .toast{
     position:fixed;left:50%;bottom:26px;transform:translate(-50%,14px);
     background:#e8ecf5;color:#0d1017;font-size:13px;font-weight:600;
@@ -345,8 +344,8 @@
   <div class="box">
     <h2 id="winTitle">Շնորհավո՜ր</h2>
     <div class="num" id="winNum"></div>
-    <div class="winwords" id="winWords"></div>
     <div class="statgrid" id="winStats"></div>
+    <div class="winwords" id="winWords"></div>
     <div class="sharebtns">
       <div class="sharelabel">Կիսվել</div>
       <div class="two">
@@ -356,7 +355,6 @@
       <button id="copyText">Պատճենել տեքստը</button>
       <button id="closeWin" style="border:none;background:none;color:var(--muted);font-size:12px">Փակել</button>
     </div>
-    <p class="next" id="nextIn"></p>
   </div>
 </div>
 
@@ -928,19 +926,17 @@ function showResult() {
 let cdTimer = null;
 function updateCountdown() {
   clearInterval(cdTimer);
-  const el = $("nextIn"), main = $("nextInMain");
-  // the sheet and the main screen run off the same tick; once the day's
-  // puzzle is done the countdown takes the timer's slot in the bar
+  const main = $("nextInMain");
+  // the countdown lives under the date, and only once the day is done —
+  // when it appears the timer, which has stopped anyway, gives up its slot
   const show = MODE === "daily" && over;
   $("nextInRow").classList.toggle("hidden", !show);
   $("timeStat").classList.toggle("hidden", show);
-  if (!show) { el.textContent = ""; main.textContent = ""; return; }
+  if (!show) { main.textContent = ""; return; }
   const paint = () => {
     const left = Math.max(0, dayStartUTC(today) + 86400e3 - Date.now());
     const h = Math.floor(left / 3600e3), m = Math.floor(left % 3600e3 / 60e3), sec = Math.floor(left % 60e3 / 1000);
-    const dur = `${h}ժ ${String(m).padStart(2, "0")}ր ${String(sec).padStart(2, "0")}վ`;
-    main.textContent = dur;
-    el.textContent = `Հաջորդ խաղը՝ ${dur}`;
+    main.textContent = `${h}ժ ${String(m).padStart(2, "0")}ր ${String(sec).padStart(2, "0")}վ`;
     if (left <= 0) { clearInterval(cdTimer); newGame(); }
   };
   paint();
