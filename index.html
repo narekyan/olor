@@ -170,7 +170,7 @@
     position:relative;border-radius:13px;background:var(--tile);
     display:flex;align-items:center;justify-content:center;
     font-size:clamp(17px,5.4vw,25px);font-weight:600;
-    color:var(--txt);border:1px solid #ffffff0d;
+    color:var(--txt);
     transition:background .13s,transform .13s,box-shadow .13s;
     cursor:pointer;letter-spacing:-.01em;
   }
@@ -179,7 +179,7 @@
   .cell:hover:not(.wall){background:var(--tile-hi)}
   /* the 7 unused squares: barely there, so the board reads as the words */
   .cell.wall{
-    background:#0f131c40;border-color:transparent;cursor:default;
+    background:#0f131c40;cursor:default;
     background-image:repeating-linear-gradient(45deg,#ffffff05 0 6px,transparent 6px 12px)
   }
   .cell.trace{background:var(--tile-hi);box-shadow:0 0 0 2px var(--accent) inset;transform:scale(.965)}
@@ -1004,12 +1004,57 @@ function resultCard() {
   g.fillStyle = bg; g.fillRect(0, 0, W, H);
   g.textAlign = "center";
 
-  // title, one colour per letter, matching the logo
+  const rr = (bx, by, w, h, r) => {
+    g.beginPath();
+    g.moveTo(bx + r, by);
+    g.arcTo(bx + w, by, bx + w, by + h, r);
+    g.arcTo(bx + w, by + h, bx, by + h, r);
+    g.arcTo(bx, by + h, bx, by, r);
+    g.arcTo(bx, by, bx + w, by, r);
+    g.closePath();
+  };
+
+  // the app icon, redrawn from icon.svg (its own 512 grid, scaled by u) so the
+  // card needs no external image
+  const drawIcon = (ix, iy, s) => {
+    const u = s / 512;
+    g.save();
+    g.translate(ix, iy);
+    rr(0, 0, s, s, s * .22);
+    g.clip();
+    const ig = g.createLinearGradient(0, 0, s, s);
+    ig.addColorStop(0, "#1b2540"); ig.addColorStop(1, "#0b0e15");
+    g.fillStyle = ig; g.fillRect(0, 0, s, s);
+    g.fillStyle = "#232b3d";
+    [[136, 136], [220, 136], [304, 136], [136, 220],
+     [304, 220], [136, 304], [220, 304], [304, 304]]
+      .forEach(([tx, ty]) => { rr(tx * u, ty * u, 72 * u, 72 * u, 18 * u); g.fill(); });
+    // the winding path in two halves, each on its own gradient
+    g.lineWidth = 42 * u; g.lineCap = "round"; g.lineJoin = "round";
+    [{pts: [[172, 256], [172, 340], [340, 340]], stops: ["#34d399", "#fbbf24"]},
+     {pts: [[172, 172], [340, 172], [340, 256], [172, 256]],
+      stops: ["#7dd3fc", "#a78bfa", "#fb7185"]}].forEach(({pts, stops}) => {
+      const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+      const pg = g.createLinearGradient(
+        Math.min(...xs) * u, Math.min(...ys) * u, Math.max(...xs) * u, Math.max(...ys) * u);
+      stops.forEach((c, i) => pg.addColorStop(i / (stops.length - 1), c));
+      g.strokeStyle = pg;
+      g.beginPath();
+      pts.forEach(([px, py], i) => i ? g.lineTo(px * u, py * u) : g.moveTo(px * u, py * u));
+      g.stroke();
+    });
+    g.restore();
+  };
+
+  // icon + wordmark, one colour per letter, centred together
   const title = "ՈԼՈՐ", size = 92, track = size * .22;
+  const ICO = 96, ICOGAP = 28;
   g.font = `700 ${size}px ${FAM}`;
   const widths = [...title].map(ch => g.measureText(ch).width);
   const total = widths.reduce((a, b) => a + b, 0) + track * (title.length - 1);
-  let x = W / 2 - total / 2;
+  let x = W / 2 - (ICO + ICOGAP + total) / 2;
+  drawIcon(x, 152 - 66 / 2 - ICO / 2, ICO);   // centred on the cap band
+  x += ICO + ICOGAP;
   g.textAlign = "left";
   [...title].forEach((ch, i) => {
     g.fillStyle = col(i);
@@ -1024,15 +1069,6 @@ function resultCard() {
 
   // decorative board
   const pad = 170, side = W - pad * 2, gap = side * .022, cs = (side - gap * 4) / 5, top = 262;
-  const rr = (bx, by, w, h, r) => {
-    g.beginPath();
-    g.moveTo(bx + r, by);
-    g.arcTo(bx + w, by, bx + w, by + h, r);
-    g.arcTo(bx + w, by + h, bx, by + h, r);
-    g.arcTo(bx, by + h, bx, by, r);
-    g.arcTo(bx, by, bx + w, by, r);
-    g.closePath();
-  };
   const cell = i => [pad + (i % 5) * (cs + gap), top + ((i / 5) | 0) * (cs + gap)];
 
   // solid connectors filling each gap, exactly like a solved word in game.
