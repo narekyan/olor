@@ -103,16 +103,32 @@ pick a subdomain, and put the code here — `olor` if your dashboard is
 
 | event | when |
 |---|---|
+| `started` | the first word of the day is found |
+| `solved/no-hints`, `solved/with-hints` | the puzzle is completed |
+| `gave-up` | the reveal button ends the day unsolved |
 | `share/native` | the system share sheet is opened |
 | `share/linkedin`, `share/instagram`, `share/copy-text` | that share button is clicked |
-| `solved/no-hints`, `solved/with-hints` | the puzzle is completed |
 | `hint` | a hint is taken |
 | `install` | the install prompt is accepted |
 
 Either one is enough for visitor counts; use GoatCounter if you want the share
-and completion numbers. Since the puzzle is once a day, "plays per user" is
-best read as visits ÷ visitors, and `solved/*` ÷ visitors is your completion
-rate. Neither tool keeps per-person history, by design.
+and completion numbers. Neither tool keeps per-person history, by design.
+
+Read the funnel as `started` → `solved/*` + `gave-up`, and read the **visits**
+column rather than pageviews: progress is kept in `localStorage`, so a reload
+adds a pageview but never re-fires an event, which makes pageviews a badly
+inflated denominator. `solved/*` ÷ `started` is the completion rate; the gap
+between the two is people who walked away mid-puzzle without revealing.
+Someone who reveals without ever finding a word fires `gave-up` and no
+`started`, so the two are not perfectly nested.
+
+To keep your own testing out of the numbers, run this once in the console on
+the live site — GoatCounter's `count.js` honours it and drops pageviews *and*
+events from that browser:
+
+```js
+localStorage.setItem("skipgc", "t")   // removeItem("skipgc") to start counting again
+```
 
 The service worker is network-first and only handles same-origin requests, so
 it never caches or intercepts either beacon.

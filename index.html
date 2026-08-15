@@ -861,6 +861,9 @@ function submit() {
   const rev = trace.slice().reverse().map(i => puzzle.letters[i]).join("");
   const idx = puzzle.words.findIndex((w, k) => !solved[k] && (w.word === s || w.word === rev));
   if (idx >= 0) {
+    // funnel entry: the first word of the day, so `started` vs `solved/*` vs
+    // `gave-up` is a real completion rate instead of a guess from pageviews
+    if (!solved.some(Boolean)) window.track?.("started");
     solved[idx] = true;
     byPlayer[idx] = true;
     trace = [];
@@ -882,6 +885,7 @@ function submit() {
 function finish(won) {
   over = true;
   gaveUp = !won;
+  if (!won) window.track?.("gave-up");   // the win is tracked at the call site, with its hint count
   running = false;
   $("hint").classList.add("hidden");
   $("reveal").disabled = true;
