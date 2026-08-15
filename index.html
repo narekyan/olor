@@ -40,6 +40,11 @@
     --w1:#fbbf24;
     --w2:#a78bfa;
     --w3:#fb7185;
+    /* lighter twin of each word colour, for the logo's gradient letters */
+    --w0l:#6ee7b7;
+    --w1l:#fcd34d;
+    --w2l:#c4b5fd;
+    --w3l:#fda4af;
     --gap:2.2;
     --font:"Noto Sans Armenian","Noto Serif Armenian","Mshtakan","Sylfaen","Arial Unicode MS",system-ui,-apple-system,sans-serif;
   }
@@ -68,6 +73,18 @@
   h1 i:nth-child(2){color:var(--w1)}
   h1 i:nth-child(3){color:var(--w2)}
   h1 i:nth-child(4){color:var(--w3)}
+  /* each letter fades from the lighter twin of its colour into the colour
+     itself; the flat colours above stay as the fallback */
+  @supports (-webkit-background-clip:text) or (background-clip:text){
+    h1 i{
+      -webkit-background-clip:text;background-clip:text;
+      color:transparent;-webkit-text-fill-color:transparent
+    }
+    h1 i:nth-child(1){background-image:linear-gradient(165deg,var(--w0l) 8%,var(--w0) 72%)}
+    h1 i:nth-child(2){background-image:linear-gradient(165deg,var(--w1l) 8%,var(--w1) 72%)}
+    h1 i:nth-child(3){background-image:linear-gradient(165deg,var(--w2l) 8%,var(--w2) 72%)}
+    h1 i:nth-child(4){background-image:linear-gradient(165deg,var(--w3l) 8%,var(--w3) 72%)}
+  }
   .sub{font-size:11.5px;color:var(--muted);letter-spacing:.03em;line-height:1.45}
   .sub b{color:#b9c2d6;font-weight:600}
 
@@ -243,6 +260,12 @@
   .how summary .chev{color:var(--muted);font-size:16px;transition:transform .2s;line-height:1}
   .how[open] summary .chev{transform:rotate(180deg)}
   .how[open]{padding-bottom:12px}
+  /* portrait screen recording — cap it so it never dwarfs the board */
+  .howvid{
+    display:block;margin:12px auto 2px;width:min(232px,64%);height:auto;
+    aspect-ratio:952/1474;background:#0b0f16;
+    border:1px solid var(--line);border-radius:12px
+  }
 
   /* "there is more below" nudge */
   .scrollhint{
@@ -330,6 +353,8 @@
     ուղիղ մեկ բառի, և բոլոր վանդակները պետք է լցվեն։
     Քաշի՛ր մկնիկով կամ մատով։
   </p>
+  <video class="howvid" id="howvid" src="help.mp4" muted loop playsinline controls
+         preload="metadata" width="952" height="1474"></video>
   </details>
 
   <div class="row">
@@ -1243,6 +1268,8 @@ hint.onclick = () => {
 addEventListener("scroll", updateHint, {passive: true});
 addEventListener("resize", updateHint);
 $("how").addEventListener("toggle", updateHint);
+// don't leave the clip running behind a collapsed panel
+$("how").addEventListener("toggle", () => { if (!$("how").open) $("howvid").pause(); });
 new ResizeObserver(updateHint).observe(document.body);
 
 /* ── PWA ─────────────────────────────────────────────────────────────── */

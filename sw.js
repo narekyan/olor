@@ -1,5 +1,5 @@
 /* Offline app shell. Bump CACHE on every deploy so clients pick up changes. */
-const CACHE = "olor-v3";
+const CACHE = "olor-v4";
 const SHELL = [
   ".", "index.html", "words.js", "manifest.webmanifest", "city.webp", "city-sm.webp",
   "icon-192.png", "icon-512.png", "icon-maskable-512.png", "apple-touch-icon.png"
@@ -21,6 +21,9 @@ self.addEventListener("activate", e => {
    with the cache as the offline fallback. */
 self.addEventListener("fetch", e => {
   if (e.request.method !== "GET" || new URL(e.request.url).origin !== location.origin) return;
+  /* the how-to-play clip is served in ranges and is far too big for the shell
+     cache — let the browser talk to the network directly */
+  if (e.request.destination === "video" || new URL(e.request.url).pathname.endsWith(".mp4")) return;
   e.respondWith(
     fetch(e.request)
       .then(res => {
