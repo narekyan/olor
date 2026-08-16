@@ -112,9 +112,9 @@
   /* nothing found in the first seconds: point at the hint, twice, then stop */
   #hint.nudge{animation:nudge 1s ease-in-out 2}
   @keyframes nudge{
-    0%,100%{transform:none;box-shadow:0 0 0 0 #7c3aed00}
-    35%{transform:translateY(-3px) scale(1.06);box-shadow:0 0 0 6px #7c3aed2e;border-color:#7c3aed}
-    70%{transform:none;box-shadow:0 0 0 12px #7c3aed00;border-color:#7c3aed66}
+    0%,100%{transform:none;box-shadow:0 0 0 0 #7c3aed00;color:var(--txt)}
+    35%{transform:translateY(-3px) scale(1.06);box-shadow:0 0 0 6px #7c3aed2e;border-color:#7c3aed;color:#a78bfa}
+    70%{transform:none;box-shadow:0 0 0 12px #7c3aed00;border-color:#7c3aed66;color:#a78bfa}
   }
 
   .board-wrap{
