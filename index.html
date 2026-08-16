@@ -109,6 +109,13 @@
   button:disabled{opacity:.4;cursor:default}
   button.primary{background:#1f2740;border-color:#3a465f}
   button.cta{background:linear-gradient(100deg,#2563eb,#7c3aed);border-color:transparent;font-weight:600}
+  /* nothing found in the first seconds: point at the hint, twice, then stop */
+  #hint.nudge{animation:nudge 1s ease-in-out 2}
+  @keyframes nudge{
+    0%,100%{transform:none;box-shadow:0 0 0 0 #7c3aed00}
+    35%{transform:translateY(-3px) scale(1.06);box-shadow:0 0 0 6px #7c3aed2e;border-color:#7c3aed}
+    70%{transform:none;box-shadow:0 0 0 12px #7c3aed00;border-color:#7c3aed66}
+  }
 
   .board-wrap{
     position:relative;border-radius:20px;padding:12px;
@@ -578,6 +585,7 @@ const cy = i => ((i / N) | 0) * (CS + GAP) + CS / 2;
 let puzzle, cellEls = [], trace = [], dragging = false, moved = false;
 let solved = [], byPlayer = [], revealed = [], hints = 0, over = false, gaveUp = false;
 let resultSeen = false;   // the sheet auto-opens once, then only via the button
+let nudged = false;       // the hint button blinks at most once per game
 let today = dayKey(), elapsed = 0, running = false, lastTs = 0, tick = null;
 
 function newGame() {
@@ -592,8 +600,10 @@ function newGame() {
   byPlayer = puzzle.words.map(() => false);
   revealed = puzzle.words.map(() => 0);
   hints = 0; trace = []; over = false; gaveUp = false; elapsed = 0; resultSeen = false;
+  nudged = false;
 
   win.classList.add("hidden");
+  $("hint").classList.remove("nudge");
   $("hint").disabled = false;
   $("hint").classList.remove("hidden");
   $("reveal").disabled = false;
@@ -642,6 +652,17 @@ function persist() {
 
 /* ── Timer ───────────────────────────────────────────────────────────── */
 const fmt = s => `${(s / 60) | 0}:${String(s % 60).padStart(2, "0")}`;
+// Five seconds of staring at the board with nothing found: blink Հուշում so
+// the way out is visible. Tied to elapsed, so a backgrounded tab doesn't burn it.
+const NUDGE_AT = 5;
+function maybeNudge() {
+  if (nudged || over || elapsed < NUDGE_AT) return;
+  if (hints || solved.some(Boolean)) return;
+  nudged = true;
+  const b = $("hint");
+  b.classList.add("nudge");
+  setTimeout(() => b.classList.remove("nudge"), 2200);
+}
 function startTimer() {
   clearInterval(tick);
   lastTs = performance.now();
@@ -652,6 +673,7 @@ function startTimer() {
     if (running && !over && document.visibilityState === "visible") {
       elapsed += Math.round((now - lastTs) / 1000);
       $("time").textContent = fmt(elapsed);
+      maybeNudge();
       if (elapsed % 5 === 0) persist();
     }
     lastTs = now;
